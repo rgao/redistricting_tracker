@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
+# In[37]:
 
 
 import geopandas as gpd
@@ -23,7 +23,7 @@ print(gdf.crs)
 gdf.head(8)
 
 
-# In[11]:
+# In[38]:
 
 
 # Test data visualization with matplotlib
@@ -81,7 +81,7 @@ gdf.head(8)
 # plt.show()
 
 
-# In[12]:
+# In[39]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -92,7 +92,10 @@ def partisan_text(val):
     try:
         num = val * 100
         
-        if num < 0:
+        if abs(num) < .01:
+            return "EVEN"
+        
+        elif num < 0:
             return f"Trump+{abs(num):.2f}"
             
         elif num > 0:
@@ -109,7 +112,7 @@ gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 gdf.head(8)
 
 
-# In[13]:
+# In[40]:
 
 
 # Finding map center
@@ -137,7 +140,7 @@ folium.TileLayer(
 ).add_to(m)
 
 
-# In[14]:
+# In[41]:
 
 
 # Define styling for targeted districts
@@ -157,7 +160,7 @@ def style_hatch(feature):
     return {'fillColor': 'transparent', 'color': 'transparent'}
 
 
-# In[15]:
+# In[42]:
 
 
 # Color scheme function for both maps to show margin lean and shift
@@ -187,7 +190,6 @@ def color_scheme(margin):
     COLOR_DARKRED    = ( 90,   0,   0)  # Deep Maroon 
     COLOR_NAVYBLUE   = (  5,  15,  50)  # Midnight Blue
 
-    # ─── LINEAR INTERPOLATION HELPER ──────────────────────────────────────────
     def interpolate(val, min_val, max_val, color_start, color_end):
         """Calculates a smooth fractional shift between two color points."""
         fraction = (val - min_val) / (max_val - min_val)
@@ -247,7 +249,7 @@ def style_right(feature):
     return style_dict
 
 
-# In[16]:
+# In[43]:
 
 
 # Tooltip styling
@@ -267,7 +269,7 @@ tooltip_left = folium.GeoJsonTooltip(
 
 tooltip_right = folium.GeoJsonTooltip(
     fields=['District No.', 'Margin Shift Partisan', 'Margin Partisan'], 
-    aliases=['New District:', "Shift from Old District's Margin:", "Old District's 2024 Margin:"],
+    aliases=['New District:', "Shift from 2024 District's Margin:", "Old District's 2024 Margin:"],
     style=(
         "background-color: rgba(255, 255, 255, 0.95); "
         "color: #1a1a1a; "
@@ -294,7 +296,7 @@ normal_font = """
 m.get_root().header.add_child(folium.Element(normal_font))
 
 
-# In[17]:
+# In[44]:
 
 
 # Create a feature group for each map to be toggled
@@ -325,7 +327,7 @@ folium.GeoJson(
 ).add_to(group_shift)
 
 
-# In[18]:
+# In[45]:
 
 
 # Add a custom city label layer on top of the maps
@@ -341,108 +343,7 @@ folium.TileLayer(
 ).add_to(m)
 
 
-# In[19]:
-
-
-# # 1. Custom CSS and HTML structure for the control panel buttons
-# custom_button_html = """
-# <div id="map-toggle-panel">
-#     <button id="btn-lean" class="toggle-btn active-btn">Margin LEAN of 2026 Districts</button>
-#     <button id="btn-shift" class="toggle-btn">Margin SHIFT from 2024 Districts</button>
-# </div>
-
-# <style>
-#     #map-toggle-panel {
-#         position: absolute;
-#         top: 20px;
-#         left: 20px;
-#         z-index: 1000;
-#         background: white;
-#         padding: 6px;
-#         border-radius: 6px;
-#         border: 2px solid #222222;
-#         box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
-#         display: flex;
-#         gap: 6px;
-#     }
-#     .toggle-btn {
-#         background-color: #f1f1f1;
-#         color: #333;
-#         border: 1px solid #ccc;
-#         padding: 8px 14px;
-#         font-size: 14px;
-#         font-weight: bold;
-#         cursor: pointer;
-#         border-radius: 4px;
-#         transition: all 0.2s ease;
-#     }
-#     .toggle-btn:hover {
-#         background-color: #e0e0e0;
-#     }
-#     .active-btn {
-#         background-color: #222222 !important;
-#         color: white !important;
-#         border-color: #222222 !important;
-#     }
-# </style>
-# """
-# m.get_root().html.add_child(folium.Element(custom_button_html))
-
-
-# # 2. Custom JavaScript to tie the buttons to Leaflet's layer manipulation system
-# # This maps our button clicks to the underlying Leaflet unique layer IDs automatically
-# layer_switching_js = """
-# <script>
-# document.addEventListener("DOMContentLoaded", function() {
-#     var checkMapInterval = setInterval(function() {
-#         // Wait until Leaflet map and our layers are fully initiated
-#         if (typeof folium_map_html !== 'undefined' || typeof m !== 'undefined') {
-#             clearInterval(checkMapInterval);
-            
-#             // Resolve the folium map object variable dynamically
-#             var mapObj = (typeof m !== 'undefined') ? m : window[Object.keys(window).find(k => k.startsWith('map_'))];
-            
-#             var leanLayer, shiftLayer;
-            
-#             // Find our feature group layers inside Leaflet
-#             mapObj.eachLayer(function(layer) {
-#                 if (layer.options && layer.options.name === "Margin LEAN") {
-#                     leanLayer = layer;
-#                 }
-#                 if (layer.options && layer.options.name === "Margin SHIFT") {
-#                     shiftLayer = layer;
-#                 }
-#             });
-
-#             var btnLean = document.getElementById('btn-lean');
-#             var btnShift = document.getElementById('btn-shift');
-
-#             btnLean.addEventListener('click', function() {
-#                 if (!mapObj.hasLayer(leanLayer)) {
-#                     mapObj.addLayer(leanLayer);
-#                     mapObj.removeLayer(shiftLayer);
-#                     btnLean.classList.add('active-btn');
-#                     btnShift.classList.remove('active-btn');
-#                 }
-#             });
-
-#             btnShift.addEventListener('click', function() {
-#                 if (!mapObj.hasLayer(shiftLayer)) {
-#                     mapObj.addLayer(shiftLayer);
-#                     mapObj.removeLayer(leanLayer);
-#                     btnShift.classList.add('active-btn');
-#                     btnLean.classList.remove('active-btn');
-#                 }
-#             });
-#         }
-#     }, 100);
-# });
-# </script>
-# """
-# m.get_root().html.add_child(folium.Element(layer_switching_js))
-
-
-# In[20]:
+# In[46]:
 
 
 # Indicate gradient breakpoints for the legend
@@ -540,7 +441,7 @@ m.get_root().html.add_child(folium.Element(percentage_formatter_js))
 m.add_child(legend)
 
 
-# In[21]:
+# In[47]:
 
 
 # JS and CSS injection for header, including title and toggle box
