@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[37]:
+# In[63]:
 
 
 import geopandas as gpd
@@ -13,8 +13,6 @@ from folium import plugins
 from folium.elements import MacroElement
 import branca.colormap as cm
 from branca.element import Element
-# import streamlit as st
-# from streamlit_folium import st_folium
 
 gdf = gpd.read_file("data/map2026.geojson")
 
@@ -23,96 +21,7 @@ print(gdf.crs)
 gdf.head(8)
 
 
-# In[38]:
-
-
-# Test data visualization with matplotlib
-# Plot 2024 Pres. margin and shift under new maps 
-# fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
-
-# gdf.plot(
-#     column='Margin New', 
-#     cmap='RdBu',
-#     vmin=-0.5,
-#     vmax=0.5,
-#     legend=True,              
-#     legend_kwds={'label': 'Harris-Trump % Margin',
-#                  'orientation': 'horizontal',
-#                  'shrink': 0.7,
-#                  'pad': 0.05},
-#     edgecolor='black',        
-#     ax=ax1
-# )
-
-# ax1.axis('off')
-# ax1.set_title(
-#     "2024 Pres. Margin Under New Boundaries", 
-#     fontsize=16, 
-#     fontweight='bold'
-# )
-
-# Change legend markers to percentage
-# fig.axes[2].xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0))
-
-# gdf.plot(
-#     column='Margin Shift',      
-#     cmap='RdBu',
-#     vmin=-0.5,
-#     vmax=0.5,
-#     legend=True,              
-#     legend_kwds={'label': 'Harris-Trump % Margin',
-#                  'orientation': 'horizontal',
-#                  'shrink': 0.7,
-#                  'pad': 0.05},
-#     edgecolor='black',        
-#     ax=ax2
-# )
-
-# ax2.axis('off')
-# ax2.set_title(
-#     "2024 Pres. Margin Shift from Old Boundaries",
-#     fontsize=16,
-#     fontweight='bold'
-# ) 
-
-# fig.axes[3].xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0))
-
-# plt.tight_layout()
-# plt.show()
-
-
-# In[39]:
-
-
-# Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
-def partisan_text(val):
-    if val is None or str(val).strip() in ['', 'nan', 'None']:
-        return "EVEN"
-        
-    try:
-        num = val * 100
-        
-        if abs(num) < .01:
-            return "EVEN"
-        
-        elif num < 0:
-            return f"Trump+{abs(num):.2f}"
-            
-        elif num > 0:
-            return f"Harris+{num:.2f}"
-            
-        return "EVEN"
-    except ValueError:
-        return str(val)
-
-gdf['Margin Partisan'] = gdf['Margin 24'].apply(partisan_text)
-gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
-gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
-
-gdf.head(8)
-
-
-# In[40]:
+# In[64]:
 
 
 # Finding map center
@@ -140,7 +49,7 @@ folium.TileLayer(
 ).add_to(m)
 
 
-# In[41]:
+# In[65]:
 
 
 # Define styling for targeted districts
@@ -160,7 +69,7 @@ def style_hatch(feature):
     return {'fillColor': 'transparent', 'color': 'transparent'}
 
 
-# In[42]:
+# In[66]:
 
 
 # Color scheme function for both maps to show margin lean and shift
@@ -221,7 +130,42 @@ def color_scheme(margin):
             return interpolate(margin, -0.01, -0.23, COLOR_RED_START, COLOR_RED_MID)
         else:
             return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
+
+
+# In[67]:
+
+
+# Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
+def partisan_text(val):
+    if val is None or str(val).strip() in ['', 'nan', 'None']:
+        return "EVEN"
         
+    try:
+        num = val * 100
+        
+        if abs(num) < .01:
+            return "EVEN"
+        
+        elif num < 0:
+            return f"Trump+{abs(num):.2f}"
+            
+        elif num > 0:
+            return f"Harris+{num:.2f}"
+            
+        return "EVEN"
+    except ValueError:
+        return str(val)
+
+gdf['Margin Partisan'] = gdf['Margin 24'].apply(partisan_text)
+gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
+gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
+
+gdf.head(8)
+
+
+# In[68]:
+
+
 # Styling function for margin lean map
 def style_left(feature):
     margin = feature['properties'].get('Margin New', 0)
@@ -249,7 +193,7 @@ def style_right(feature):
     return style_dict
 
 
-# In[43]:
+# In[69]:
 
 
 # Tooltip styling
@@ -282,21 +226,8 @@ tooltip_right = folium.GeoJsonTooltip(
     localize=True
 )
 
-# Make the 3rd field in the shift map tooltip normal font to indicate less importance
-normal_font = """
-<style>
-.leaflet-tooltip tr:nth-child(3) th,
-.leaflet-tooltip tr:nth-child(3) td {
-    font-weight: normal !important;
-}
-</style>
-"""
 
-# Append the above font rule to the map head layout
-m.get_root().header.add_child(folium.Element(normal_font))
-
-
-# In[44]:
+# In[70]:
 
 
 # Create a feature group for each map to be toggled
@@ -327,7 +258,7 @@ folium.GeoJson(
 ).add_to(group_shift)
 
 
-# In[45]:
+# In[71]:
 
 
 # Add a custom city label layer on top of the maps
@@ -342,8 +273,11 @@ folium.TileLayer(
     max_zoom=8
 ).add_to(m)
 
+# Toggle box
+folium.LayerControl(position='topleft', collapsed=False).add_to(m)
 
-# In[46]:
+
+# In[72]:
 
 
 # Indicate gradient breakpoints for the legend
@@ -372,201 +306,17 @@ legend.tick_labels = [-0.40, -0.20, 0.0, 0.20, 0.40]
 legend.width = 650
 legend.height = 45
 
-# Tailored legend layout overrides matching your light title card theme
-legend_css = """
-<style>
-    /* Absolute layout tracking for the floating container block */
-    .legend {
-        position: fixed !important;
-        bottom: 20px !important;
-        left: 20px !important;
-        z-index: 9999 !important;
-        background-color: rgba(255, 255, 255, 0.95) !important;        
-        border: 2px solid #222222 !important;       
-        border-radius: 6px !important;              
-        padding: 12px 14px !important;
-        box-shadow: 3px 3px 12px rgba(0,0,0,0.15);
-    }
-    
-    .legend svg {
-        height: 55px !important; 
-        overflow: visible !important;
-    }
-    
-    .legend .caption {
-        color: #1a1a1a !important;                  
-        font-size: 13px !important;
-        font-weight: bold !important;
-        transform: translateY(10px);
-        font-family: 'Helvetica Neue', Arial, sans-serif !important;
-    }
-    
-    .legend text {
-        fill: #1a1a1a !important;                   
-        font-size: 10px !important;
-        font-weight: bold !important;
-        font-family: 'Helvetica Neue', Arial, sans-serif !important;
-    }
-</style>
-"""
-m.get_root().header.add_child(folium.Element(legend_css))
-
-# Re-engineered JavaScript formatter mapping labels to your 7 new threshold markers
-percentage_formatter_js = """
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    var checkTicksInterval = setInterval(function() {
-        var ticks = document.querySelectorAll('div.legend g.tick text');
-        
-        // Check if graphics have loaded
-        if (ticks.length > 0) {
-            clearInterval(checkTicksInterval);
-            
-            // Explicitly map string representation arrays sequentially to match index stops
-            var customLabels = ['-40%', '-20%', '0%', '+20%', '+40%'];
-            
-            for (var i = 0; i < ticks.length; i++) {
-                if (i < customLabels.length) {
-                    ticks[i].textContent = customLabels[i];
-                }
-            }
-        }
-    }, 100);
-});
-</script>
-"""
-m.get_root().html.add_child(folium.Element(percentage_formatter_js))
-
 # Append layout node to the final folium canvas map object instance
-m.add_child(legend)
+m.add_child(legend);
 
 
-# In[47]:
+# In[73]:
 
 
-# JS and CSS injection for header, including title and toggle box
-unified_header_html = """
-<div id="header-wrapper">
-    <div class="title-card">
-        <h1 style="margin: 0; font-size: 20px; font-weight: bold;">
-            Mid-Decade Redistricting Visualized
-        </h1>
-        <p style="margin: 3px 0 0 0; font-size: 12px; font-weight: bold;">
-            Partisan Lean and Shift of New Districts based on the 2024 Presidential Margin
-        </p>
-    </div>
-    
-    <!-- Empty anchor destination where our CSS will inject and position the native toggle box -->
-    <div id="toggle-anchor-zone"></div>
-</div>
-
-<style>
-    /* Master Flex wrapper to structurally stack components without fixed overlapping gaps */
-    #header-wrapper {
-        position: fixed;
-        top: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;               
-        width: 90%;             
-        max-width: 650px;
-        pointer-events: none;    /* Allows dragging map through empty gap spaces */
-    }
-    
-    .title-card {
-        pointer-events: auto;    /* Enables interaction over text fields */
-        /* The 4th value is opacity */
-        background: linear-gradient(
-            to right, 
-            rgba(240, 128, 128, 0.85), 
-            rgba(245, 245, 245, 0.85), 
-            rgba(135, 206, 250, 0.85)  
-        );
-        color: #1a1a1a; 
-        border: 2px solid #222222;
-        border-radius: 6px;
-        padding: 10px 20px;
-        box-shadow: 3px 3px 12px rgba(0,0,0,0.15);
-        text-align: center;
-        font-family: 'Helvetica Neue', Arial, sans-serif;
-        width: 80%;
-        box-sizing: border-box;
-    }
-    
-    .leaflet-top.leaflet-left {
-        display: block !important; 
-    }
-    
-    .leaflet-control-layers {
-        pointer-events: auto;
-        position: static !important; /* Strips original fixed overlay behaviors */
-        margin: 0 auto !important;
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        border: 2px solid #222222 !important;
-        border-radius: 6px !important;
-        box-shadow: 3px 3px 12px rgba(0,0,0,0.15) !important;
-        padding: 6px 12px !important;
-        font-family: 'Helvetica Neue', Arial, sans-serif !important;
-        display: inline-block !important;
-    }
-    
-    /* Change toggles from vertical to horizontal list */
-    .leaflet-control-layers-list,
-    .leaflet-control-layers-base {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 16px !important;
-        flex-wrap: wrap !important; /* Wraps items cleanly on extra small screens */
-    }
-    
-    .leaflet-control-layers-base label {
-        display: flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        margin: 0 !important;
-        font-size: 13px !important;
-        font-weight: bold !important;
-        color: #1a1a1a !important;
-        cursor: pointer !important;
-        white-space: nowrap !important; /* Keeps individual labels on a single line */
-    }
-    
-    .leaflet-control-layers-base input[type="radio"] {
-        margin: 0 !important;
-        cursor: pointer !important;
-    }
-</style>
-"""
-m.get_root().html.add_child(folium.Element(unified_header_html))
-
-# Moves the toggle box from its native left-side positioning to within our header container
-append_control_js = """
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Checks for element loads every 100ms
-    var checkControlInterval = setInterval(function() {
-        var nativeControl = document.querySelector('.leaflet-control-layers');
-        var targetAnchor = document.getElementById('toggle-anchor-zone');
-        
-        if (nativeControl && targetAnchor) {
-            // If elements have loaded, stop the timer check and reposition the toggle box
-            clearInterval(checkControlInterval);
-            targetAnchor.appendChild(nativeControl);
-        }
-    }, 100);
-});
-</script>
-"""
-m.get_root().html.add_child(folium.Element(append_control_js))
-
-# Initiate the toggle box
-folium.LayerControl(position='topleft', collapsed=False).add_to(m)
+Read and drop the HTML header layout into the document body
+m.get_root().html.add_child(folium.Element(open('./header.html', encoding='utf-8').read()))
+m.get_root().header.add_child(folium.CssLink('./style.css'))
+m.get_root().html.add_child(folium.JavascriptLink('./scripts.js'))
 
 m.save("index.html")
 m

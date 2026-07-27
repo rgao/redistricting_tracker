@@ -1,0 +1,103 @@
+/* 1. Header and Gradient Title Card */
+#master-header-wrapper {
+    position: fixed;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;               
+    width: 90%;             
+    max-width: 650px;
+    pointer-events: none;    
+}
+
+.map-title-card {
+    pointer-events: auto;    
+    background: linear-gradient(to right, rgba(240,128,128,0.85), rgba(245,245,245,0.85), rgba(135,206,250,0.85));
+    border: 2px solid #222222;
+    border-radius: 6px;
+    padding: 12px 20px;
+    box-shadow: 3px 3px 12px rgba(0,0,0,0.15);
+    text-align: center;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 2. Reposition Native Leaflet Controls */
+.leaflet-top.leaflet-left {
+    display: block !important;
+    pointer-events: none;
+}
+
+/* .leaflet-control-zoom {
+    pointer-events: auto;
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    left: auto !important;
+    margin: 0 !important;
+    border: 2px solid #222222 !important;
+    border-radius: 6px !important;
+    box-shadow: 3px 3px 12px rgba(0,0,0,0.15) !important;
+} */
+
+.leaflet-control-layers {
+    pointer-events: auto;
+    position: static !important; 
+    margin: 0 auto !important;
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    border: 2px solid #222222 !important;
+    border-radius: 6px !important;
+    box-shadow: 3px 3px 12px rgba(0,0,0,0.15) !important;
+    padding: 6px 12px !important;
+    font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    display: inline-block !important;
+}
+
+.leaflet-control-layers-list,
+.leaflet-control-layers-base {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    flex-wrap: wrap !important; 
+}
+
+.leaflet-control-layers-base label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    color: #1a1a1a !important;
+    cursor: pointer !important;
+    white-space: nowrap !important; 
+}
+
+/* 3. Branca Legend Card Adjustments */
+.legend {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 9999 !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;        
+    border: 2px solid #222222 !important;       
+    border-radius: 6px !important;              
+    padding: 12px 14px !important;
+    box-shadow: 3px 3px 12px rgba(0,0,0,0.15);
+}
+.legend svg { height: 55px !important; overflow: visible !important; }
+.legend .caption { color: #1a1a1a !important; font-size: 13px !important; font-weight: bold !important; transform: translateY(10px); font-family: 'Helvetica Neue', Arial, sans-serif !important; }
+.legend text { fill: #1a1a1a !important; font-size: 11px !important; font-weight: bold !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; }
+
+/* 4. Tooltip Font Formatting */
+.leaflet-tooltip tr:nth-child(3) th, 
+.leaflet-tooltip tr:nth-child(3) td { 
+    font-weight: normal !important; 
+}
