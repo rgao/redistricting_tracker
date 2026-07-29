@@ -313,7 +313,7 @@ m.add_child(legend);
 # In[73]:
 
 
-Read and drop the HTML header layout into the document body
+# Read and drop the HTML header layout into the document body
 m.get_root().html.add_child(folium.Element(open('./header.html', encoding='utf-8').read()))
 m.get_root().header.add_child(folium.CssLink('./style.css'))
 m.get_root().html.add_child(folium.JavascriptLink('./scripts.js'))
