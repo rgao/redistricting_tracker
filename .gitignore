@@ -1,8 +1,7 @@
 todo.txt
 data/
 data/**
-louisianamap/
-louisianamap/**
+2024_rep.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
