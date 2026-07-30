@@ -1,86 +1,75 @@
-/* 1. Header and Gradient Title Card */
-#master-header-wrapper {
-    position: fixed;
-    top: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;               
-    width: 90%;             
-    max-width: 650px;
-    pointer-events: none;    
-}
-
-.map-title-card {
-    pointer-events: auto;    
-    background: linear-gradient(to right, rgba(240,128,128,0.85), rgba(245,245,245,0.85), rgba(135,206,250,0.85));
-    border: 2px solid #222222;
-    border-radius: 6px;
-    padding: 12px 20px;
-    box-shadow: 3px 3px 12px rgba(0,0,0,0.15);
-    text-align: center;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* 2. Reposition Native Leaflet Controls */
+/* Overlay */
 .leaflet-top.leaflet-left {
     display: block !important;
     pointer-events: none;
 }
 
-/* .leaflet-control-zoom {
-    pointer-events: auto;
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    left: auto !important;
-    margin: 0 !important;
-    border: 2px solid #222222 !important;
-    border-radius: 6px !important;
-    box-shadow: 3px 3px 12px rgba(0,0,0,0.15) !important;
-} */
-
-.leaflet-control-layers {
-    pointer-events: auto;
-    position: static !important; 
-    margin: 0 auto !important;
-    background-color: rgba(255, 255, 255, 0.85) !important;
-    border: 2px solid #222222 !important;
-    border-radius: 6px !important;
-    box-shadow: 3px 3px 12px rgba(0,0,0,0.15) !important;
-    padding: 6px 12px !important;
-    font-family: 'Helvetica Neue', Arial, sans-serif !important;
-    display: inline-block !important;
+/* Title Card */
+#master-header-wrapper {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 1000; /* Forces panel to sit completely on top of all interactive map features */
+    background: rgba(255, 255, 255, 0.95);
+    padding: 14px 18px;
+    border: 2px solid #222222;
+    border-radius: 4px;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column; /* Neatly stacks your title card text and buttons vertically */
+    gap: 12px;
+    font-family: Arial, sans-serif;
+    max-width: 450px;
+    pointer-events: auto; /* Ensures users can click your nav buttons */
 }
 
-.leaflet-control-layers-list,
-.leaflet-control-layers-base {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 16px !important;
-    flex-wrap: wrap !important; 
+.map-title-card {
+    display: flex;
+    flex-direction: column;
 }
 
-.leaflet-control-layers-base label {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    margin: 0 !important;
-    font-size: 13px !important;
-    font-weight: bold !important;
-    color: #1a1a1a !important;
-    cursor: pointer !important;
-    white-space: nowrap !important; 
+
+/* Navigation */
+.map-page-navigation {
+    display: flex;
+    gap: 6px;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 12px;
 }
 
-/* 3. Branca Legend Card Adjustments */
+/* Navigation Links */
+.nav-btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 12px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+    color: #444444;
+    background: #f5f5f5;
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+    transition: all 0.15s ease-in-out;
+}
+
+/* Hover and Focus States */
+.nav-btn:hover {
+    background: #e8e8e8;
+    color: #1a1a1a;
+    border-color: #999999;
+}
+
+/* Highlighting */
+.nav-btn.active {
+    background: #222222;
+    color: #ffffff;
+    border-color: #222222;
+    cursor: default;
+    pointer-events: none; /* Disables clicking the current page to prevent accidental page refreshes */
+}
+
+
+/* Legend Card */
 .legend {
     position: fixed !important;
     bottom: 20px !important;

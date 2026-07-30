@@ -1,14 +1,25 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Move the Layer Control box into our Header Wrapper
-    var checkControlInterval = setInterval(function() {
-        var nativeControl = document.querySelector('.leaflet-control-layers');
-        var targetAnchor = document.getElementById('toggle-anchor-zone');
+    
+    // 1. Dynamic Page Navigation Active State Manager
+    (function manageNavigation() {
+        const navContainer = document.querySelector(".map-page-navigation");
+        if (!navContainer) return;
+
+        // Isolate the base filename from the URL path string
+        const currentPath = window.location.pathname.split("/").pop();
         
-        if (nativeControl && targetAnchor) {
-            clearInterval(checkControlInterval);
-            targetAnchor.appendChild(nativeControl);
+        // Fallback default target context for root-level domain structures
+        const activePage = (currentPath === "" || currentPath === "index.html") ? "index.html" : currentPath;
+
+        // Apply visual markers and styling hooks to target links
+        navContainer.setAttribute("data-current-page", activePage);
+        
+        const targetLink = navContainer.querySelector(`a[href="${activePage}"]`);
+        if (targetLink) {
+            targetLink.classList.add("active");
         }
-    }, 100);
+    })();
+
 
     // 2. Format Legend Ticks with Clean Percentage Text
     var checkTicksInterval = setInterval(function() {
@@ -25,4 +36,5 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     }, 100);
+
 });
