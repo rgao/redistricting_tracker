@@ -19,7 +19,8 @@ html, body {
 .leaflet-top.leaflet-left {
     display: block !important;
     pointer-events: none;
-    padding-top: 110px !important; /* Pushes the overlay down so it doesn't overlap with Navigation */
+    padding-top: 110px !important; 
+    padding-right: 10px !important; 
 }
 
 .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -110,6 +111,44 @@ html, body {
     pointer-events: none; /* Disables clicking the current page to prevent accidental page refreshes */
 }
 
+/* Sidebar default layout hidden/collapsed by default or fixed width */
+.sidebar {
+    position: absolute;
+    top: 108px; /* Adjust based on header height */
+    right: 0;
+    width: 350px;
+    max-width: 40vw;
+    height: 100vh; /* Adjust based on header + footer height */
+    background-color: #ffffff;
+    z-index: 1000; /* Must be higher than Folium map container (usually around 400) */
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    overflow-x: hidden;
+}
+
+.sidebar.collapsed {
+    left: -250px; /* Leaves just enough room for the toggle button */
+}
+
+.sidebar-content {
+    padding: 20px;
+}
+
+.toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+}
+
+/* Adjust standard leaflet container if needed */
+.leaflet-container {
+    z-index: 1;
+}
 
 /* Legend Card */
 .legend {

@@ -1,17 +1,17 @@
 document.addEventListener("DOMContentLoaded", function() {
     
-    // 1. Dynamic Page Navigation Active State Manager
+    // Navigation Management
     (function manageNavigation() {
         const navContainer = document.querySelector(".map-page-navigation");
         if (!navContainer) return;
 
-        // Isolate the base filename from the URL path string
+        // Isolate page URL
         const currentPath = window.location.pathname.split("/").pop();
         
-        // Fallback default target context for root-level domain structures
+        // Fallback default target 
         const activePage = (currentPath === "" || currentPath === "index.html") ? "index.html" : currentPath;
 
-        // Apply visual markers and styling hooks to target links
+        // Active page styling
         navContainer.setAttribute("data-current-page", activePage);
         
         const targetLink = navContainer.querySelector(`a[href="${activePage}"]`);
@@ -20,8 +20,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     })();
 
-
-    // 2. Format Legend Ticks with Clean Percentage Text
+    // Format Legend Ticks 
     var checkTicksInterval = setInterval(function() {
         var ticks = document.querySelectorAll('div.legend g.tick text');
         
@@ -37,4 +36,12 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }, 100);
 
+    // Sidebar loading
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggle-btn');
+
+    toggleBtn.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+    });
 });
+
