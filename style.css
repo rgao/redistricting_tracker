@@ -16,14 +16,14 @@ html, body {
 }
 
 /* Overlay */
-.leaflet-top.leaflet-left {
+.leaflet-top.leaflet-right {
     display: block !important;
     pointer-events: none;
     padding-top: 110px !important; 
     padding-right: 10px !important; 
 }
 
-.leaflet-top.leaflet-left .leaflet-control-zoom {
+.leaflet-top.leaflet-right .leaflet-control-zoom {
     pointer-events: auto !important;
 }
 
@@ -115,7 +115,7 @@ html, body {
 .sidebar {
     position: absolute;
     top: 108px; /* Adjust based on header height */
-    right: 0;
+    left: 0;
     width: 350px;
     max-width: 40vw;
     height: 100vh; /* Adjust based on header + footer height */
