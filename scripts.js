@@ -43,12 +43,5 @@ document.addEventListener("DOMContentLoaded", function() {
     toggleBtn.addEventListener('click', function() {
         sidebar.classList.toggle('collapsed');
     });
-
-    // Move zoom control to top right
-    var zoomControl = document.querySelector(".leaflet-control-zoom");
-    var topRight = document.querySelector(".leaflet-top.leaflet-right");
-    if (zoomControl && topRight) {
-        topRight.appendChild(zoomControl);
-    }
 });
 

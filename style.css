@@ -15,16 +15,13 @@ html, body {
     left: 0 !important;
 }
 
-/* Overlay */
-.leaflet-top.leaflet-right {
-    display: block !important;
-    pointer-events: none;
-    padding-top: 110px !important; 
-    padding-right: 10px !important; 
-}
-
-.leaflet-top.leaflet-right .leaflet-control-zoom {
-    pointer-events: auto !important;
+/* Shift the Leaflet zoom container to the upper right corner */
+.leaflet-top.leaflet-left .leaflet-control-zoom {
+    position: fixed !important;
+    top: 110px !important;
+    right: 10px !important;
+    left: auto !important;
+    z-index: 10000 !important;
 }
 
 /* Title Card */
@@ -111,38 +108,167 @@ html, body {
     pointer-events: none; /* Disables clicking the current page to prevent accidental page refreshes */
 }
 
-/* Sidebar default layout hidden/collapsed by default or fixed width */
+/* Component Scoped Design Tokens */
 .sidebar {
-    position: absolute;
-    top: 108px; /* Adjust based on header height */
-    left: 0;
-    width: 350px;
-    max-width: 40vw;
-    height: 100vh; /* Adjust based on header + footer height */
-    background-color: #ffffff;
-    z-index: 1000; /* Must be higher than Folium map container (usually around 400) */
-    transition: all 0.3s ease;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    overflow-x: hidden;
+  --ms-bg-main: #0f172a;
+  --ms-bg-surface: #1e293b;
+  --ms-border-muted: #334155;
+  --ms-dem-blue: #2563eb;
+  --ms-rep-red: #dc2626;
+  --ms-text-main: #f8fafc;
+  --ms-text-muted: #94a3b8;
+
+  /* Layout configuration to overlay perfectly on top of Folium map */
+  position: absolute !important;
+  top: 108px !important;
+  left: 0 !important;
+  z-index: 100 !important; /* Forces sidebar onto the top visual layer */
+  pointer-events: auto !important; /* Keeps sidebar elements clickable */
+
+  /* Structural styles */
+  width: 360px;
+  max-width: 50vw;
+  height: 100vh;
+  background-color: var(--ms-bg-main);
+  color: var(--ms-text-main);
+  border-right: 1px solid var(--ms-border-muted);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.sidebar.collapsed {
-    left: -250px; /* Leaves just enough room for the toggle button */
+/* Ensure all child elements use border-box explicitly within the scope */
+.sidebar *, 
+.sidebar *::before, 
+.sidebar *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.sidebar-content {
-    padding: 20px;
+/* Header Section */
+.sidebar .sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--ms-border-muted);
 }
 
-.toggle-btn {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    cursor: pointer;
-    background: #333;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
+.sidebar .region-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ms-text-main);
+  line-height: 1.2;
+}
+
+.sidebar .region-subtitle {
+  font-size: 0.85rem;
+  color: var(--ms-text-muted);
+  margin-top: 4px;
+}
+
+/* Standard Widget Containers */
+.sidebar .data-section {
+  padding: 20px;
+  border-bottom: 1px solid var(--ms-border-muted);
+}
+
+.sidebar .section-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ms-text-muted);
+  margin-bottom: 12px;
+  font-weight: 600;
+  display: block;
+}
+
+/* Candidate Row Layouts */
+.sidebar .candidate-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sidebar .candidate-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar .party-indicator {
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.sidebar .party-indicator.dem { background-color: var(--ms-dem-blue); }
+.sidebar .party-indicator.rep { background-color: var(--ms-rep-red); }
+
+.sidebar .candidate-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ms-text-main);
+}
+
+.sidebar .vote-data {
+  text-align: right;
+}
+
+.sidebar .vote-percentage {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ms-text-main);
+  line-height: 1.1;
+}
+
+.sidebar .sidebar .vote-count {
+  font-size: 0.75rem;
+  color: var(--ms-text-muted);
+  margin-top: 2px;
+}
+
+/* Progress Linear Margin Tracker */
+.sidebar .margin-bar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--ms-border-muted);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 12px;
+  display: flex;
+}
+
+.sidebar .bar-fill { height: 100%; }
+.sidebar .bar-fill.dem { background-color: var(--ms-dem-blue); }
+.sidebar .bar-fill.rep { background-color: var(--ms-rep-red); }
+
+/* Demographics Grid Component */
+.sidebar .demo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.sidebar .demo-card {
+  background-color: var(--ms-bg-surface);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--ms-border-muted);
+}
+
+.sidebar .demo-label {
+  font-size: 0.75rem;
+  color: var(--ms-text-muted);
+  margin-bottom: 4px;
+}
+
+.sidebar .demo-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ms-text-main);
 }
 
 /* Adjust standard leaflet container if needed */
