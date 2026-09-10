@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[23]:
+# In[1]:
 
 
 import geopandas as gpd
@@ -15,7 +15,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[24]:
+# In[2]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -36,7 +36,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[25]:
+# In[3]:
 
 
 # Color scheme
@@ -69,22 +69,22 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[26]:
+# In[4]:
 
 
 # Define static assets and variable
 # Title card and navigation
-HEADER_HTML_CONTENT = open('./header.html', encoding='utf-8').read()
+HEADER_HTML_CONTENT = open('./components/header.html', encoding='utf-8').read()
 
 # Sidebar
-SIDEBAR_HTML_CONTENT = open('./sidebar.html', encoding='utf-8').read()
+SIDEBAR_HTML_CONTENT = open('./components/sidebar.html', encoding='utf-8').read()
 
 # Footer / copyright
-FOOTER_HTML_CONTENT = open('./footer.html', encoding='utf-8').read()
+FOOTER_HTML_CONTENT = open('./components/footer.html', encoding='utf-8').read()
 
 # Scripts and styling
-CSS_ASSETS = folium.CssLink('./style.css')
-JS_ASSETS  = folium.JavascriptLink('./scripts.js')
+CSS_ASSETS = folium.CssLink('./docs/static/style.css')
+JS_ASSETS  = folium.JavascriptLink('./docs/static/scripts.js')
 
 # Legend parameters 
 LEGEND_BOUNDS = [-0.45, -0.23, -0.01, 0.0, 0.01, 0.23, 0.45]
@@ -187,7 +187,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[27]:
+# In[5]:
 
 
 # Tooltips on hover
@@ -206,24 +206,24 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[28]:
+# In[6]:
 
 
 # Compile margin lean map
 compile_map(
-    filename="index.html",
+    filename="docs/index.html",
     target_column="Margin New",
     tooltip_config=tooltip_lean,
     legend_caption="Harris-Trump Margin (Striped = Targeted District)"
 )
 
 
-# In[29]:
+# In[7]:
 
 
 # Compile margin shift map
 compile_map(
-    filename="shift.html",
+    filename="docs/shift.html",
     target_column="Margin Shift",
     tooltip_config=tooltip_shift,
     legend_caption="Harris-Trump Margin Shift from 2024 Districts (Striped = Targeted District)"
