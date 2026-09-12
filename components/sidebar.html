@@ -1,63 +1,128 @@
 <!-- Main Sidebar Panel Wrapper -->
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
 
-  <!-- Header Module -->
+  <!-- Header Module: District Seat Balance (Metric 1) -->
   <div class="sidebar-header">
-    <div class="region-title">Kent County</div>
-    <div class="region-subtitle">Michigan • 100% of Precincts Reporting</div>
+    <div class="region-title" id="sb-region-title">Statewide Impact</div>
+    <div class="region-subtitle" id="sb-region-subtitle">Overview Across Redistricted Map</div>
+    
+    <div style="display: flex; gap: 8px; margin-top: 10px;">
+      <div style="flex: 1; background: rgba(37, 99, 235, 0.15); border: 1px solid var(--ms-dem-blue); border-radius: 4px; padding: 6px; text-align: center;">
+        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--ms-text-muted);">Favored D</div>
+        <div style="font-size: 1.1rem; font-weight: 700; color: #60a5fa;" id="sb-favored-dem">6</div>
+      </div>
+      <div style="flex: 1; background: rgba(220, 38, 38, 0.15); border: 1px solid var(--ms-rep-red); border-radius: 4px; padding: 6px; text-align: center;">
+        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--ms-text-muted);">Favored R</div>
+        <div style="font-size: 1.1rem; font-weight: 700; color: #f87171;" id="sb-favored-rep">16</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Results Section -->
+  <!-- Combined Vote Share: Old vs New Boundaries (Metric 4) -->
   <div class="data-section">
-    <div class="section-title">Presidential Election Results</div>
+    <div class="section-title">Aggregated Vote Share</div>
 
+    <!-- New Borders Breakdown -->
+    <div style="font-size: 0.75rem; color: var(--ms-text-muted); margin-bottom: 6px; font-weight: 600;">2026 Redistricted Borders</div>
     <div class="candidate-row">
       <div class="candidate-info">
         <div class="party-indicator dem"></div>
-        <div class="candidate-name">Democratic Candidate</div>
+        <div class="candidate-name">Harris (New)</div>
       </div>
       <div class="vote-data">
-        <div class="vote-percentage">51.4%</div>
-        <div class="vote-count">185,204 votes</div>
+        <div class="vote-percentage" id="sb-harris-new-pct">48.2%</div>
       </div>
     </div>
-
+    
     <div class="candidate-row">
       <div class="candidate-info">
         <div class="party-indicator rep"></div>
-        <div class="candidate-name">Republican Candidate</div>
+        <div class="candidate-name">Trump (New)</div>
       </div>
       <div class="vote-data">
-        <div class="vote-percentage">46.2%</div>
-        <div class="vote-count">166,471 votes</div>
+        <div class="vote-percentage" id="sb-trump-new-pct">50.8%</div>
       </div>
     </div>
+    <div class="margin-bar" style="margin-bottom: 14px;">
+      <div class="bar-fill dem" id="sb-bar-dem-new" style="width: 48.2%"></div>
+      <div class="bar-fill rep" id="sb-bar-rep-new" style="width: 50.8%"></div>
+    </div>
 
-    <div class="margin-bar">
-      <div class="bar-fill dem" style="width: 51.4%"></div>
-      <div class="bar-fill rep" style="width: 46.2%"></div>
+    <!-- Old Borders Breakdown -->
+    <div style="font-size: 0.75rem; color: var(--ms-text-muted); margin-bottom: 6px; font-weight: 600;">2024 Prior Borders</div>
+    <div class="candidate-row">
+      <div class="candidate-info">
+        <div class="party-indicator dem" style="opacity: 0.7;"></div>
+        <div class="candidate-name" style="color: var(--ms-text-muted);">Harris (2024)</div>
+      </div>
+      <div class="vote-data">
+        <div class="vote-percentage" style="font-size: 0.95rem; color: var(--ms-text-muted);" id="sb-harris-24-pct">49.1%</div>
+      </div>
+    </div>
+    <div class="candidate-row">
+      <div class="candidate-info">
+        <div class="party-indicator rep" style="opacity: 0.7;"></div>
+        <div class="candidate-name" style="color: var(--ms-text-muted);">Trump (2024)</div>
+      </div>
+      <div class="vote-data">
+        <div class="vote-percentage" style="font-size: 0.95rem; color: var(--ms-text-muted);" id="sb-trump-24-pct">49.9%</div>
+      </div>
     </div>
   </div>
 
-  <!-- Demographics Section -->
+  <!-- Key Aggregate Metrics (Metrics 2, 3, 5, 7) -->
   <div class="data-section">
-    <div class="section-title">Key Demographics</div>
+    <div class="section-title">Redistricting Metrics</div>
     <div class="demo-grid">
+      
+      <!-- Mean Partisan Shift (Metric 2) -->
       <div class="demo-card">
-        <div class="demo-label">College Grads</div>
-        <div class="demo-value">38.2%</div>
+        <div class="demo-label">Mean Shift (|Δ|)</div>
+        <div class="demo-value" id="sb-mean-shift">4.8%</div>
       </div>
+
+      <!-- Mean Partisan Lean (Metric 3) -->
       <div class="demo-card">
-        <div class="demo-label">Median Income</div>
-        <div class="demo-value">$74.5k</div>
+        <div class="demo-label">Mean Lean (|Lean|)</div>
+        <div class="demo-value" id="sb-mean-lean">18.3%</div>
       </div>
+
+      <!-- GOP Advantage (Metric 5) -->
       <div class="demo-card">
-        <div class="demo-label">White Pop.</div>
-        <div class="demo-value">72.1%</div>
+        <div class="demo-label">GOP Net Bias</div>
+        <div class="demo-value" style="color: #f87171;" id="sb-gop-bias">R +3.2%</div>
       </div>
+
+      <!-- Majority-Minority Count (Metric 7) -->
       <div class="demo-card">
-        <div class="demo-label">Turnout Rate</div>
-        <div class="demo-value">74.8%</div>
+        <div class="demo-label">Maj-Min Dist.</div>
+        <div class="demo-value" id="sb-maj-min-count">2</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tipping Point Districts (Metric 6) -->
+  <div class="data-section">
+    <div class="section-title">Tipping Point Districts</div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--ms-text-main);" id="sb-tipping-new-name">District AL02</div>
+        <div style="font-size: 0.75rem; color: var(--ms-text-muted);">Post-Redistricting (New)</div>
+      </div>
+      <div style="text-align: right;">
+        <span style="font-size: 0.9rem; font-weight: 700; color: #60a5fa;" id="sb-tipping-new-margin">R +14.3%</span>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--ms-text-muted);" id="sb-tipping-old-name">District AL01</div>
+        <div style="font-size: 0.75rem; color: var(--ms-text-muted);">Prior Lines (2024)</div>
+      </div>
+      <div style="text-align: right;">
+        <span style="font-size: 0.9rem; font-weight: 700; color: var(--ms-text-muted);" id="sb-tipping-old-margin">D +8.2%</span>
       </div>
     </div>
   </div>
