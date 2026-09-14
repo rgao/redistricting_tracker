@@ -9,6 +9,10 @@ body {
   /* Prevents the browser from showing a secondary window scrollbar */
 }
 
+:root {
+  --footer-height: 55px;
+}
+
 .folium-map {
   width: 100% !important;
   height: 100% !important;
@@ -116,6 +120,7 @@ body {
 
 /* Component Scoped Design Tokens */
 .sidebar {
+  /* Design Tokens / Colors */
   --ms-bg-main: #0f172a;
   --ms-bg-surface: #1e293b;
   --ms-border-muted: #334155;
@@ -124,37 +129,92 @@ body {
   --ms-text-main: #f8fafc;
   --ms-text-muted: #cbd5e1;
 
-  /* Layout configuration to overlay perfectly on top of Folium map */
-  position: absolute !important;
+  /* Positioning & Layering */
+  position: fixed !important;
   top: 108px !important;
+  bottom: var(--footer-height, 0px) !important;
   left: 0 !important;
-  z-index: 100 !important;
-  /* Forces sidebar onto the top visual layer */
+  z-index: 1000 !important;
   pointer-events: auto !important;
-  /* Keeps sidebar elements clickable */
 
-  /* Structural styles */
+  /* Dimensions & Flow */
   width: 380px;
-  max-width: 50vw;
-  height: calc(100vh - 108px - 70px) !important;
-  /* Viewport height minus header and footer */
+  max-width: 90vw;
+  height: auto !important;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  /* Overflow: visible lets the toggle tab poke outside without being clipped */
+  overflow: visible !important;
+
+  /* Surface & Typography */
   background-color: var(--ms-bg-main);
   color: var(--ms-text-main);
   border-right: 1px solid var(--ms-border-muted);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Smooth Slide Transition */
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Ensure all child elements use border-box explicitly within the scope */
-.sidebar *,
-.sidebar *::before,
-.sidebar *::after {
+/* Collapsed state on Desktop: Slides off to the left */
+.sidebar.collapsed {
+  transform: translateX(-100%) !important;
+  overflow: visible;
+  /* Allows toggle tab to remain visible */
+}
+
+/* Toggle Button Styling */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 12px;
+  right: -32px;
+  /* Hangs off the right edge of sidebar */
+  width: 32px;
+  height: 36px;
+  background: var(--ms-bg-card, #1e293b);
+  color: var(--ms-text-main, #f8fafc);
+  border: 1px solid var(--ms-border-muted, #334155);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.25);
+  z-index: 1002;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar.collapsed .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--ms-border-muted, #334155);
+}
+
+.toggle-icon {
+  pointer-events: none;
+  display: inline-block;
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+/* Rotate icon when collapsed */
+.sidebar.collapsed .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.sidebar-content {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  padding: 16px;
 }
 
 /* Header Section */
@@ -301,14 +361,15 @@ body {
 /* Legend Card */
 .legend {
   position: fixed !important;
-  bottom: 70px !important;
-  right: 5px !important;
+  bottom: calc(var(--footer-height, 45px) + 12px) !important;
+  right: 12px !important;
   z-index: 9999 !important;
   background-color: rgba(255, 255, 255, 0.95) !important;
   border: 1px solid #222222 !important;
   border-radius: 1px !important;
   padding: 5px 0 5px 0 !important;
   box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.15);
+  transition: bottom 0.2s ease;
 }
 
 .legend svg {
@@ -401,4 +462,80 @@ body {
   font-size: 10px !important;
   color: #666666 !important;
   text-align: center;
+}
+
+@media (max-width: 768px) {
+
+  /* 1. Header: Compact font sizes to save vertical space */
+  #map-title {
+    font-size: 18px !important;
+  }
+
+  .nav-btn {
+    padding: 6px 8px !important;
+    font-size: 13px !important;
+  }
+
+  /* 2. Sidebar: Convert from left drawer to a bottom sheet */
+  .sidebar {
+    width: 100% !important;
+    max-width: 100vw !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    height: 45vh !important;
+    border-right: none !important;
+    border-top: 2px solid var(--ms-border-muted) !important;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
+    z-index: 1001 !important;
+    overflow: visible !important;
+  }
+
+  /* Mobile collapsed state (slides down out of viewport, leaves grab tab) */
+  .sidebar.collapsed {
+    transform: translateY(calc(100% - 28px)) !important;
+  }
+
+  /* Center the toggle button as a top pull-tab / grab bar */
+  .sidebar-toggle-btn {
+    top: -26px !important;
+    right: 50% !important;
+    transform: translateX(50%) !important;
+    width: 64px !important;
+    height: 26px !important;
+    border: 1px solid var(--ms-border-muted) !important;
+    border-bottom: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    background: var(--ms-bg-main) !important;
+  }
+
+  /* Point arrow downward when open, upward when collapsed */
+  .sidebar .toggle-icon {
+    transform: rotate(90deg);
+  }
+
+  .sidebar.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+  }
+
+  /* 3. Re-adjust Zoom Controls so they do not overlap header */
+  .leaflet-top.leaflet-left .leaflet-control-zoom {
+    top: 85px !important;
+    right: 12px !important;
+  }
+
+  /* 4. Legend: Tuck above the bottom sheet */
+  .legend {
+    bottom: 46vh !important;
+    right: 5px !important;
+    transform: scale(0.85);
+    transform-origin: bottom right;
+  }
+
+  /* 5. Footer: Tuck behind or collapse on mobile */
+  #master-footer-wrapper {
+    display: none !important;
+    /* Reserve footer metadata for desktop or an info modal */
+  }
 }

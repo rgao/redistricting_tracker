@@ -1,5 +1,5 @@
-document.addEventListener("DOMContentLoaded", function() {
-    
+document.addEventListener("DOMContentLoaded", function () {
+
     // Navigation Management
     (function manageNavigation() {
         const navContainer = document.querySelector(".map-page-navigation");
@@ -7,13 +7,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Isolate page URL
         const currentPath = window.location.pathname.split("/").pop();
-        
+
         // Fallback default target 
         const activePage = (currentPath === "" || currentPath === "index.html") ? "index.html" : currentPath;
 
         // Active page styling
         navContainer.setAttribute("data-current-page", activePage);
-        
+
         const targetLink = navContainer.querySelector(`a[href="${activePage}"]`);
         if (targetLink) {
             targetLink.classList.add("active");
@@ -21,13 +21,13 @@ document.addEventListener("DOMContentLoaded", function() {
     })();
 
     // Format Legend Ticks 
-    var checkTicksInterval = setInterval(function() {
+    var checkTicksInterval = setInterval(function () {
         var ticks = document.querySelectorAll('div.legend g.tick text');
-        
+
         if (ticks.length > 0) {
             clearInterval(checkTicksInterval);
             var customLabels = ['-40%', '-20%', '0%', '+20%', '+40%'];
-            
+
             for (var i = 0; i < ticks.length; i++) {
                 if (i < customLabels.length) {
                     ticks[i].textContent = customLabels[i];
@@ -40,8 +40,27 @@ document.addEventListener("DOMContentLoaded", function() {
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
 
-    toggleBtn.addEventListener('click', function() {
+    toggleBtn.addEventListener('click', function () {
         sidebar.classList.toggle('collapsed');
     });
+
+    function setupSidebarToggle() {
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        if (!toggleBtn || !sidebar) return;
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            sidebar.classList.toggle('collapsed');
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupSidebarToggle);
+    } else {
+        setupSidebarToggle();
+    }
 });
 
