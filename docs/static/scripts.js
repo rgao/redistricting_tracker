@@ -1,33 +1,26 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Navigation Management
+    // 1. Navigation Management
     (function manageNavigation() {
         const navContainer = document.querySelector(".map-page-navigation");
         if (!navContainer) return;
 
-        // Isolate page URL
         const currentPath = window.location.pathname.split("/").pop();
-
-        // Fallback default target 
         const activePage = (currentPath === "" || currentPath === "index.html") ? "index.html" : currentPath;
 
-        // Active page styling
         navContainer.setAttribute("data-current-page", activePage);
-
         const targetLink = navContainer.querySelector(`a[href="${activePage}"]`);
         if (targetLink) {
             targetLink.classList.add("active");
         }
     })();
 
-    // Format Legend Ticks 
+    // 2. Format Legend Ticks
     var checkTicksInterval = setInterval(function () {
         var ticks = document.querySelectorAll('div.legend g.tick text');
-
         if (ticks.length > 0) {
             clearInterval(checkTicksInterval);
             var customLabels = ['-40%', '-20%', '0%', '+20%', '+40%'];
-
             for (var i = 0; i < ticks.length; i++) {
                 if (i < customLabels.length) {
                     ticks[i].textContent = customLabels[i];
@@ -36,31 +29,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }, 100);
 
-    // Sidebar loading
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('toggle-btn');
-
-    toggleBtn.addEventListener('click', function () {
-        sidebar.classList.toggle('collapsed');
+    // 3. Populate Vote Margin Fill Bars from data-width
+    document.querySelectorAll('.bar-fill[data-width]').forEach((el) => {
+        const w = el.getAttribute('data-width');
+        if (w) el.style.width = w;
     });
 
-    function setupSidebarToggle() {
-        const toggleBtn = document.getElementById('sidebar-toggle');
-        const sidebar = document.getElementById('sidebar');
-
-        if (!toggleBtn || !sidebar) return;
-
-        toggleBtn.addEventListener('click', (e) => {
+    // 4. Sidebar Toggle Listener (Delegated to handle all screen sizes)
+    document.addEventListener('click', function (e) {
+        const toggleBtn = e.target.closest('#sidebar-toggle');
+        if (toggleBtn) {
             e.preventDefault();
             e.stopPropagation();
-            sidebar.classList.toggle('collapsed');
-        });
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupSidebarToggle);
-    } else {
-        setupSidebarToggle();
-    }
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+    });
 });
-

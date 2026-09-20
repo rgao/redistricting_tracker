@@ -132,7 +132,7 @@ body {
   /* Positioning & Layering */
   position: fixed !important;
   top: 108px !important;
-  bottom: var(--footer-height, 0px) !important;
+  bottom: var(--footer-height, 55px) !important;
   left: 0 !important;
   z-index: 1000 !important;
   pointer-events: auto !important;
@@ -145,7 +145,7 @@ body {
   flex-direction: column;
   box-sizing: border-box;
 
-  /* Overflow: visible lets the toggle tab poke outside without being clipped */
+  /* Must be visible so toggle button is not clipped */
   overflow: visible !important;
 
   /* Surface & Typography */
@@ -158,52 +158,56 @@ body {
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Collapsed state on Desktop: Slides off to the left */
+/* Desktop Collapsed State */
 .sidebar.collapsed {
   transform: translateX(-100%) !important;
-  overflow: visible;
-  /* Allows toggle tab to remain visible */
 }
 
-/* Toggle Button Styling */
+/* Internal Scroll Body */
+.sidebar-content {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Desktop Toggle Tab Button */
 .sidebar-toggle-btn {
   position: absolute;
-  top: 12px;
+  top: 14px;
   right: -32px;
-  /* Hangs off the right edge of sidebar */
   width: 32px;
-  height: 36px;
-  background: var(--ms-bg-card, #1e293b);
-  color: var(--ms-text-main, #f8fafc);
-  border: 1px solid var(--ms-border-muted, #334155);
+  height: 38px;
+  background: var(--ms-bg-surface);
+  color: var(--ms-text-main);
+  border: 1px solid var(--ms-border-muted);
   border-left: none;
   border-radius: 0 6px 6px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 3px 2px 8px rgba(0, 0, 0, 0.3);
   z-index: 1002;
   transition: background-color 0.2s ease;
 }
 
-.sidebar.collapsed .toggle-icon {
-  transform: rotate(180deg);
-}
-
 .sidebar-toggle-btn:hover {
-  background: var(--ms-border-muted, #334155);
+  background: var(--ms-border-muted);
 }
 
 .toggle-icon {
   pointer-events: none;
   display: inline-block;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
   transition: transform 0.3s ease;
 }
 
-/* Rotate icon when collapsed */
 .sidebar.collapsed .toggle-icon {
   transform: rotate(180deg);
 }
@@ -361,15 +365,15 @@ body {
 /* Legend Card */
 .legend {
   position: fixed !important;
-  bottom: calc(var(--footer-height, 45px) + 12px) !important;
-  right: 12px !important;
+  top: 112px !important;
+  right: 60px !important;            /* Sits directly left of Folium zoom buttons */
+  bottom: auto !important;
   z-index: 9999 !important;
   background-color: rgba(255, 255, 255, 0.95) !important;
   border: 1px solid #222222 !important;
-  border-radius: 1px !important;
-  padding: 5px 0 5px 0 !important;
-  box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.15);
-  transition: bottom 0.2s ease;
+  border-radius: 2px !important;
+  padding: 5px 8px !important;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .legend svg {
@@ -471,46 +475,45 @@ body {
     font-size: 18px !important;
   }
 
-  .nav-btn {
-    padding: 6px 8px !important;
-    font-size: 13px !important;
+  #master-footer-wrapper {
+    display: none !important;
   }
 
-  /* 2. Sidebar: Convert from left drawer to a bottom sheet */
+  /* Bottom-Sheet Sidebar */
   .sidebar {
     width: 100% !important;
     max-width: 100vw !important;
     top: auto !important;
     bottom: 0 !important;
     left: 0 !important;
-    height: 45vh !important;
+    height: 46vh !important;
     border-right: none !important;
     border-top: 2px solid var(--ms-border-muted) !important;
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
     z-index: 1001 !important;
     overflow: visible !important;
   }
 
-  /* Mobile collapsed state (slides down out of viewport, leaves grab tab) */
+  /* Mobile Collapsed State */
   .sidebar.collapsed {
-    transform: translateY(calc(100% - 28px)) !important;
+    transform: translateY(100%) !important;
   }
 
-  /* Center the toggle button as a top pull-tab / grab bar */
+  /* Centered Mobile Pull-Tab */
   .sidebar-toggle-btn {
     top: -26px !important;
     right: 50% !important;
     transform: translateX(50%) !important;
-    width: 64px !important;
+    width: 68px !important;
     height: 26px !important;
     border: 1px solid var(--ms-border-muted) !important;
     border-bottom: none !important;
     border-radius: 8px 8px 0 0 !important;
     background: var(--ms-bg-main) !important;
+    box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.25);
   }
 
-  /* Point arrow downward when open, upward when collapsed */
   .sidebar .toggle-icon {
     transform: rotate(90deg);
   }
@@ -519,23 +522,16 @@ body {
     transform: rotate(-90deg);
   }
 
-  /* 3. Re-adjust Zoom Controls so they do not overlap header */
+  /* Compact zoom buttons and legend on phones */
   .leaflet-top.leaflet-left .leaflet-control-zoom {
-    top: 85px !important;
-    right: 12px !important;
+    top: 90px !important;
+    right: 8px !important;
   }
 
-  /* 4. Legend: Tuck above the bottom sheet */
   .legend {
-    bottom: 46vh !important;
-    right: 5px !important;
-    transform: scale(0.85);
-    transform-origin: bottom right;
-  }
-
-  /* 5. Footer: Tuck behind or collapse on mobile */
-  #master-footer-wrapper {
-    display: none !important;
-    /* Reserve footer metadata for desktop or an info modal */
+    top: 90px !important;
+    right: 52px !important;
+    transform: scale(0.8);
+    transform-origin: top right;
   }
 }

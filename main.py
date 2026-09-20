@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[48]:
 
 
 import geopandas as gpd
 import folium
 from folium import plugins
-import branca.colormap as cm
+import branca
 
 gdf = gpd.read_file("data/map2026.geojson")
 # Check for EPSG 4326 for folium compatibility
@@ -15,7 +15,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[2]:
+# In[49]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -36,7 +36,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[3]:
+# In[50]:
 
 
 # Color scheme
@@ -69,7 +69,58 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[4]:
+# In[51]:
+
+
+# Sidebar default value calculations
+favored_dem = int((gdf['Margin New'] > 0).sum())
+favored_rep = int((gdf['Margin New'] < 0).sum())
+
+mean_shift = f"{gdf['Margin Shift'].abs().mean() * 100:.1f}%"
+mean_lean  = f"{gdf['Margin New'].abs().mean() * 100:.1f}%"
+
+harris_new_pct = f"{gdf['Harris New'].mean() * 100:.1f}%"
+trump_new_pct  = f"{gdf['Trump New'].mean() * 100:.1f}%"
+harris_24_pct  = f"{gdf['Harris 24'].mean() * 100:.1f}%"
+trump_24_pct   = f"{gdf['Trump 24'].mean() * 100:.1f}%"
+
+median_margin = gdf['Margin New'].median()
+mean_margin   = gdf['Margin New'].mean()
+bias_val      = (median_margin - mean_margin) * 100
+gop_bias      = f"{'R +' if bias_val < 0 else 'D +'}{abs(bias_val):.1f}%"
+
+# Tipping Point District Calculation
+sorted_new = gdf.sort_values(by='Margin New', ascending=True).reset_index(drop=True)
+mid_new = len(sorted_new) // 2
+tipping_new_name = sorted_new.loc[mid_new, 'District']
+val_new = sorted_new.loc[mid_new, 'Margin New'] * 100
+tipping_new_margin = f"{'Harris +' if val_new > 0 else 'Trump +'}{abs(val_new):.1f}%"
+
+sorted_24 = gdf.sort_values(by='Margin 24', ascending=True).reset_index(drop=True)
+mid_24 = len(sorted_24) // 2
+tipping_old_name = sorted_24.loc[mid_24, 'District']
+val_24 = sorted_24.loc[mid_24, 'Margin 24'] * 100
+tipping_old_margin = f"{'Harris +' if val_24 > 0 else 'Trump +'}{abs(val_24):.1f}%"
+
+sidebar_context = {
+    "favored_dem": favored_dem,
+    "favored_rep": favored_rep,
+    "harris_new_pct": harris_new_pct,
+    "trump_new_pct": trump_new_pct,
+    "harris_24_pct": harris_24_pct,
+    "trump_24_pct": trump_24_pct,
+    "mean_shift": mean_shift,
+    "mean_lean": mean_lean,
+    "gop_bias": gop_bias,
+    "maj_min_count": 5,
+    "tipping_new_name": tipping_new_name,
+    "tipping_new_margin": tipping_new_margin,
+    "tipping_old_name": tipping_old_name,
+    "tipping_old_margin": tipping_old_margin
+}
+
+
+# In[52]:
 
 
 # Define static assets and variable
@@ -77,14 +128,22 @@ def color_scheme(margin):
 HEADER_HTML_CONTENT = open('./components/header.html', encoding='utf-8').read()
 
 # Sidebar
-SIDEBAR_HTML_CONTENT = open('./components/sidebar.html', encoding='utf-8').read()
+with open('./components/sidebar.html', 'r', encoding='utf-8') as f:
+    sidebar_template = f.read()
+
+for key, value in sidebar_context.items():
+    sidebar_template = sidebar_template.replace(f"{{{key}}}", str(value))
+
+SIDEBAR_HTML_CONTENT = sidebar_template
 
 # Footer / copyright
 FOOTER_HTML_CONTENT = open('./components/footer.html', encoding='utf-8').read()
 
 # Scripts and styling
-CSS_ASSETS = folium.CssLink('./docs/static/style.css')
-JS_ASSETS  = folium.JavascriptLink('./docs/static/scripts.js')
+with open('./docs/static/style.css', 'r', encoding='utf-8') as f:
+    css = f.read()
+with open('./docs/static/scripts.js', 'r', encoding='utf-8') as f:
+    scripts = f.read()
 
 # Legend parameters 
 LEGEND_BOUNDS = [-0.45, -0.23, -0.01, 0.0, 0.01, 0.23, 0.45]
@@ -92,15 +151,15 @@ LEGEND_COLORS = ['#5A0000', '#C82828', '#FF6E6E', '#8C8C8C', '#ADD8E6', '#285AA0
 LEGEND_TICKS  = [-0.40, -0.20, 0.0, 0.20, 0.40]
 
 centroid = gdf.unary_union.centroid
-center = [centroid.y-2, centroid.x-7]
+center = [centroid.y+3, centroid.x-7]
 
 # Map boundary controls
 MAP_OPTIONS = {
     'zoom_start': 5,
     'min_zoom': 5,
     'max_zoom': 8,
-    'min_lat': center[0]-15,
-    'max_lat': center[0]+20,
+    'min_lat': center[0]-25,
+    'max_lat': center[0]+25,
     'min_long': center[1]-30,
     'max_long': center[1]+35,
 }
@@ -109,7 +168,7 @@ MAP_OPTIONS = {
 def compile_map(filename, target_column, tooltip_config, legend_caption):
     # Base canvas
     m = folium.Map(
-        location=center, 
+        location=center,
         zoom_start=MAP_OPTIONS['zoom_start'], 
         tiles=None, 
         min_zoom=MAP_OPTIONS['min_zoom'], 
@@ -163,7 +222,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     ).add_to(m)
 
     # Render legend
-    legend = cm.LinearColormap(
+    legend = branca.colormap.LinearColormap(
         colors=LEGEND_COLORS, 
         index=LEGEND_BOUNDS, 
         vmin=min(LEGEND_BOUNDS), 
@@ -178,8 +237,8 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     m.get_root().html.add_child(folium.Element(HEADER_HTML_CONTENT))
     m.get_root().html.add_child(folium.Element(SIDEBAR_HTML_CONTENT))
     m.get_root().html.add_child(folium.Element(FOOTER_HTML_CONTENT))
-    m.get_root().header.add_child(CSS_ASSETS)
-    m.get_root().html.add_child(JS_ASSETS)
+    m.get_root().header.add_child(folium.Element(f"<style>{css}</style>"))
+    m.get_root().html.add_child(folium.Element(f"<script>{scripts}</script>"))
 
     m.save(filename)
     print(f"Successfully compiled: {filename}")
@@ -187,7 +246,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[5]:
+# In[53]:
 
 
 # Tooltips on hover
@@ -206,7 +265,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[6]:
+# In[54]:
 
 
 # Compile margin lean map
@@ -218,7 +277,7 @@ compile_map(
 )
 
 
-# In[7]:
+# In[55]:
 
 
 # Compile margin shift map
