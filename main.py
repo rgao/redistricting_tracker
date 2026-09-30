@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[48]:
+# In[9]:
 
 
 import geopandas as gpd
@@ -15,7 +15,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[49]:
+# In[10]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -36,7 +36,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[50]:
+# In[11]:
 
 
 # Color scheme
@@ -69,27 +69,42 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[51]:
+# In[12]:
 
 
-# Sidebar default value calculations
-favored_dem = int((gdf['Margin New'] > 0).sum())
-favored_rep = int((gdf['Margin New'] < 0).sum())
+# --- Filter Targeted / Impacted Districts ---
+targeted_gdf = gdf[gdf['Targeted'] == True].copy()
 
-mean_shift = f"{gdf['Margin Shift'].abs().mean() * 100:.1f}%"
-mean_lean  = f"{gdf['Margin New'].abs().mean() * 100:.1f}%"
+# 1. Favored D/R for Targeted Districts Only
+favored_dem = int((targeted_gdf['Margin New'] > 0).sum())
+favored_rep = int((targeted_gdf['Margin New'] < 0).sum())
 
+# 2. Aggregated Vote Shares (Across all districts in the 10 states)
 harris_new_pct = f"{gdf['Harris New'].mean() * 100:.1f}%"
 trump_new_pct  = f"{gdf['Trump New'].mean() * 100:.1f}%"
 harris_24_pct  = f"{gdf['Harris 24'].mean() * 100:.1f}%"
 trump_24_pct   = f"{gdf['Trump 24'].mean() * 100:.1f}%"
 
-median_margin = gdf['Margin New'].median()
-mean_margin   = gdf['Margin New'].mean()
-bias_val      = (median_margin - mean_margin) * 100
-gop_bias      = f"{'R +' if bias_val < 0 else 'D +'}{abs(bias_val):.1f}%"
+# 3. Redistricting Metrics Section
+# Mean Partisan Shift (|Δ|) across targeted districts
+mean_shift = f"{targeted_gdf['Margin Shift'].abs().mean() * 100:.1f}%"
 
-# Tipping Point District Calculation
+# Median Partisan Lean (|Lean|) across targeted districts
+median_lean = f"{targeted_gdf['Margin New'].abs().median() * 100:.1f}%"
+
+# Net Shift: Mean shift of all affected districts (directional)
+# In your data: positive Margin Shift indicates Democratic gain, negative indicates Republican gain
+raw_net_shift = targeted_gdf['Margin Shift'].mean() * 100
+net_shift = f"{'D +' if raw_net_shift > 0 else 'R +'}{abs(raw_net_shift):.2f}%"
+
+# Median Impacted District: Targeted district with the median margin lean
+sorted_targeted = targeted_gdf.sort_values(by='Margin New', ascending=True).reset_index(drop=True)
+median_impacted_idx = len(sorted_targeted) // 2
+median_impacted_name = sorted_targeted.loc[median_impacted_idx, 'District']
+median_impacted_margin_val = sorted_targeted.loc[median_impacted_idx, 'Margin New'] * 100
+median_impacted_val = f"{median_impacted_name}, {'D +' if median_impacted_margin_val > 0 else 'R +'}{abs(median_impacted_margin_val):.1f}%"
+
+# 4. Tipping Point Districts
 sorted_new = gdf.sort_values(by='Margin New', ascending=True).reset_index(drop=True)
 mid_new = len(sorted_new) // 2
 tipping_new_name = sorted_new.loc[mid_new, 'District']
@@ -102,6 +117,7 @@ tipping_old_name = sorted_24.loc[mid_24, 'District']
 val_24 = sorted_24.loc[mid_24, 'Margin 24'] * 100
 tipping_old_margin = f"{'Harris +' if val_24 > 0 else 'Trump +'}{abs(val_24):.1f}%"
 
+# Updated context dictionary
 sidebar_context = {
     "favored_dem": favored_dem,
     "favored_rep": favored_rep,
@@ -110,9 +126,9 @@ sidebar_context = {
     "harris_24_pct": harris_24_pct,
     "trump_24_pct": trump_24_pct,
     "mean_shift": mean_shift,
-    "mean_lean": mean_lean,
-    "gop_bias": gop_bias,
-    "maj_min_count": 5,
+    "median_lean": median_lean,
+    "net_shift": net_shift,
+    "median_impacted_val": median_impacted_val,
     "tipping_new_name": tipping_new_name,
     "tipping_new_margin": tipping_new_margin,
     "tipping_old_name": tipping_old_name,
@@ -120,7 +136,7 @@ sidebar_context = {
 }
 
 
-# In[52]:
+# In[13]:
 
 
 # Define static assets and variable
@@ -246,7 +262,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[53]:
+# In[14]:
 
 
 # Tooltips on hover
@@ -265,7 +281,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[54]:
+# In[15]:
 
 
 # Compile margin lean map
@@ -277,7 +293,7 @@ compile_map(
 )
 
 
-# In[55]:
+# In[16]:
 
 
 # Compile margin shift map
