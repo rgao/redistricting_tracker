@@ -1,4 +1,6 @@
-/* Overrides Branca and Folium for Footer Placement */
+/* ==========================================================================
+   1. GLOBAL RESETS & FOLIUM OVERRIDES
+   ========================================================================== */
 html,
 body {
   width: 100% !important;
@@ -6,7 +8,6 @@ body {
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
-  /* Prevents the browser from showing a secondary window scrollbar */
 }
 
 :root {
@@ -21,7 +22,7 @@ body {
   left: 0 !important;
 }
 
-/* Shift the Leaflet zoom container to the upper right corner */
+/* Leaflet Zoom control position */
 .leaflet-top.leaflet-left .leaflet-control-zoom {
   position: fixed !important;
   top: 110px !important;
@@ -30,23 +31,32 @@ body {
   z-index: 10000 !important;
 }
 
-/* Title Card */
+.leaflet-container {
+  z-index: 1;
+}
+
+/* Tooltip typography */
+.leaflet-tooltip tr:nth-child(3) th,
+.leaflet-tooltip tr:nth-child(3) td {
+  font-weight: normal !important;
+}
+
+/* ==========================================================================
+   2. HEADER & NAVIGATION
+   ========================================================================== */
 #master-header-wrapper {
   position: absolute;
   top: 0 !important;
   width: 100% !important;
   margin: 0 !important;
   z-index: 1000;
-  /* Forces panel to sit completely on top of all interactive map features */
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid #222222;
-  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  /* Neatly stacks your title card text and buttons vertically */
   font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
   pointer-events: auto;
-  /* Ensures users can click your nav buttons */
 }
 
 .map-title-card {
@@ -61,12 +71,8 @@ body {
   font-size: 28px;
   font-weight: bold;
   padding-bottom: 4px;
-
-  /* Force the bounding box to match the text width */
   display: inline-block;
   width: max-content;
-
-  /* Gradient Text Styling */
   background: linear-gradient(to right, darkred, navy);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -75,20 +81,18 @@ body {
 
 #subtitle {
   margin: 0;
-  font-size: 12px;
-  color: #444444;
-  font-weight: bold;
+  font-size: 13px;
+  color: #334155;
+  font-weight: 700;
   text-align: center;
 }
 
-/* Navigation */
 .map-page-navigation {
   display: flex;
   justify-content: center;
   border-top: 1px solid #e0e0e0;
 }
 
-/* Navigation Links */
 .nav-btn {
   flex: 1;
   text-align: center;
@@ -102,23 +106,22 @@ body {
   transition: all 0.15s ease-in-out;
 }
 
-/* Hover and Focus States */
 .nav-btn:hover {
   color: steelblue;
   border-color: #999999;
 }
 
-/* Highlighting */
 .nav-btn.active {
   background: #222222;
   color: #ffffff;
   border-color: #222222;
   cursor: default;
   pointer-events: none;
-  /* Disables clicking the current page to prevent accidental page refreshes */
 }
 
-/* Component Scoped Design Tokens */
+/* ==========================================================================
+   3. SIDEBAR DRAWER & TOGGLE BUTTON
+   ========================================================================== */
 .sidebar {
   /* Design Tokens / Colors */
   --ms-bg-main: #0f172a;
@@ -129,7 +132,6 @@ body {
   --ms-text-main: #f8fafc;
   --ms-text-muted: #cbd5e1;
 
-  /* Positioning & Layering */
   position: fixed !important;
   top: 108px !important;
   bottom: var(--footer-height, 55px) !important;
@@ -137,61 +139,55 @@ body {
   z-index: 1000 !important;
   pointer-events: auto !important;
 
-  /* Dimensions & Flow */
-  width: 380px;
+  width: 410px;               /* Slightly widened to give larger text breathing room */
   max-width: 90vw;
   height: auto !important;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 
-  /* Must be visible so toggle button is not clipped */
   overflow: visible !important;
 
-  /* Surface & Typography */
   background-color: var(--ms-bg-main);
   color: var(--ms-text-main);
   border-right: 1px solid var(--ms-border-muted);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  /* Smooth Slide Transition */
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Desktop Collapsed State */
 .sidebar.collapsed {
   transform: translateX(-100%) !important;
 }
 
-/* Internal Scroll Body */
 .sidebar-content {
   height: 100%;
   width: 100%;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
-  padding: 16px;
+  padding: 18px 16px;
   display: flex;
   flex-direction: column;
+  gap: 18px;
 }
 
-/* Desktop Toggle Tab Button */
 .sidebar-toggle-btn {
   position: absolute;
   top: 14px;
-  right: -32px;
-  width: 32px;
-  height: 38px;
+  right: -34px;
+  width: 34px;
+  height: 40px;
   background: var(--ms-bg-surface);
   color: var(--ms-text-main);
   border: 1px solid var(--ms-border-muted);
   border-left: none;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 8px 8px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 3px 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 4px 2px 10px rgba(0, 0, 0, 0.35);
   z-index: 1002;
   transition: background-color 0.2s ease;
 }
@@ -203,7 +199,7 @@ body {
 .toggle-icon {
   pointer-events: none;
   display: inline-block;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
   transition: transform 0.3s ease;
 }
@@ -212,168 +208,288 @@ body {
   transform: rotate(180deg);
 }
 
-.sidebar-content {
-  height: 100%;
-  width: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  box-sizing: border-box;
-  padding: 16px;
-}
-
-/* Header Section */
+/* ==========================================================================
+   4. SIDEBAR INTERNAL MODULES & WIDGETS
+   ========================================================================== */
 .sidebar .sidebar-header {
-  padding: 20px;
+  padding: 8px 4px 18px 4px;
   border-bottom: 1px solid var(--ms-border-muted);
 }
 
-.sidebar .region-title {
-  font-size: 1.32rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+.region-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--ms-text-main);
-  line-height: 1.2;
+  text-transform: capitalize;
 }
 
-.sidebar .region-subtitle {
-  font-size: 0.95rem;
+.region-caption {
+  font-size: 0.92rem;
   color: var(--ms-text-muted);
+  text-transform: capitalize;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.seat-balance-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.seat-badge {
+  flex: 1;
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.seat-badge.dem {
+  background: rgba(37, 99, 235, 0.22);
+  border: 1.5px solid var(--ms-dem-blue);
+}
+
+.seat-badge.rep {
+  background: rgba(220, 38, 38, 0.22);
+  border: 1.5px solid var(--ms-rep-red);
+}
+
+.seat-badge-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+}
+
+.seat-badge-value {
+  font-size: 1.6rem;
+  font-weight: 800;
   margin-top: 4px;
 }
 
-/* Standard Widget Containers */
+.seat-badge.dem .seat-badge-value { color: #60a5fa; }
+.seat-badge.rep .seat-badge-value { color: #f87171; }
+
 .sidebar .data-section {
-  padding: 20px;
+  padding: 14px 4px 18px 4px;
   border-bottom: 1px solid var(--ms-border-muted);
 }
 
 .sidebar .section-title {
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ms-text-muted);
-  margin-bottom: 12px;
-  font-weight: 600;
+  font-size: 1.02rem;
+  text-transform: capitalize;
+  letter-spacing: 0.01em;
+  color: #f1f5f9;
+  margin-bottom: 14px;
+  font-weight: 800;
   display: block;
+  line-height: 1.35;
 }
 
-/* Candidate Row Layouts */
+/* Candidate Row Breakdown */
 .sidebar .candidate-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .sidebar .candidate-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .sidebar .party-indicator {
-  width: 4px;
-  height: 16px;
-  border-radius: 2px;
+  width: 5px;
+  height: 20px;
+  border-radius: 3px;
 }
 
-.sidebar .party-indicator.dem {
-  background-color: var(--ms-dem-blue);
+.sidebar .party-indicator.dem { background-color: var(--ms-dem-blue); }
+.sidebar .party-indicator.rep { background-color: var(--ms-rep-red); }
+
+/* Prominent sizing for New Lines */
+.candidate-row.prominent {
+  margin-bottom: 10px;
 }
 
-.sidebar .party-indicator.rep {
-  background-color: var(--ms-rep-red);
-}
-
-.sidebar .candidate-name {
-  font-size: 0.95rem;
-  font-weight: 500;
+.candidate-name.prominent {
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--ms-text-main);
 }
 
-.sidebar .vote-data {
-  text-align: right;
-}
-
-.sidebar .vote-percentage {
-  font-size: 1.32rem;
-  font-weight: 700;
+.vote-percentage.prominent {
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--ms-text-main);
   line-height: 1.1;
 }
 
-.sidebar .sidebar .vote-count {
-  font-size: 0.95rem;
-  color: var(--ms-text-muted);
-  margin-top: 2px;
+.party-indicator.prominent {
+  width: 6px;
+  height: 22px;
 }
 
-/* Progress Linear Margin Tracker */
+/* Subordinate sizing for Prior Lines */
+.candidate-row.prior-cycle {
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.candidate-name.muted {
+  font-size: 0.95rem;
+  color: #94a3b8 !important;
+  font-weight: 500;
+}
+
+.vote-percentage.muted {
+  font-size: 1.12rem;
+  color: #94a3b8 !important;
+  font-weight: 700;
+}
+
+.party-indicator.muted {
+  opacity: 0.65;
+}
+
 .sidebar .margin-bar {
   width: 100%;
-  height: 8px;
+  height: 10px;
   background-color: var(--ms-border-muted);
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
-  margin-top: 12px;
+  margin-top: 14px;
+  margin-bottom: 16px;
   display: flex;
 }
 
-.sidebar .bar-fill {
-  height: 100%;
-}
+.sidebar .bar-fill { height: 100%; }
+.sidebar .bar-fill.dem { background-color: var(--ms-dem-blue); }
+.sidebar .bar-fill.rep { background-color: var(--ms-rep-red); }
 
-.sidebar .bar-fill.dem {
-  background-color: var(--ms-dem-blue);
-}
-
-.sidebar .bar-fill.rep {
-  background-color: var(--ms-rep-red);
-}
-
-/* Demographics Grid Component */
+/* ==========================================================================
+   TOPLINE STATS GRID & ALIGNMENT FIX
+   ========================================================================== */
 .sidebar .demo-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
+/* Flexbox guarantees vertical alignment regardless of 2 vs 3 text items */
 .sidebar .demo-card {
   background-color: var(--ms-bg-surface);
-  padding: 12px;
-  border-radius: 6px;
+  padding: 14px 12px;
+  border-radius: 8px;
   border: 1px solid var(--ms-border-muted);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Equalizes card baseline heights */
+  min-height: 104px;              /* Standardized minimum container height */
+  box-sizing: border-box;
 }
 
 .sidebar .demo-label {
-  font-size: 0.95rem;
-  color: var(--ms-text-muted);
-  margin-bottom: 4px;
+  font-size: 0.92rem;
+  color: #cbd5e1;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 8px;
 }
 
 .sidebar .demo-value {
-  font-size: 1.32rem;
-  font-weight: 600;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--ms-text-main);
+  line-height: 1.15;
+}
+
+.demo-sublabel {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  text-transform: capitalize;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Color-Coded Median Impacted District */
+.median-impacted-val {
+  font-size: 1.15rem !important;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.median-impacted-val.dem,
+.median-impacted-val.dem .district-code,
+.median-impacted-val.dem .lean-value {
+  color: #60a5fa !important;
+}
+
+.median-impacted-val.rep,
+.median-impacted-val.rep .district-code,
+.median-impacted-val.rep .lean-value {
+  color: #f87171 !important;
+}
+
+/* Tipping Point Module */
+.tipping-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tipping-row:last-child {
+  margin-bottom: 0;
+}
+
+.tipping-name {
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--ms-text-main);
 }
 
-/* Adjust standard leaflet container if needed */
-.leaflet-container {
-  z-index: 1;
+.tipping-sub {
+  font-size: 0.82rem;
+  color: var(--ms-text-muted);
+  margin-top: 2px;
 }
 
-/* Legend Card */
+.tipping-margin {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #60a5fa;
+}
+
+.tipping-name.muted {
+  color: #94a3b8 !important;
+  font-weight: 600;
+}
+
+.tipping-margin.muted {
+  color: #94a3b8 !important;
+  font-size: 1.1rem;
+}
+
+/* ==========================================================================
+   5. COLORMAP LEGEND
+   ========================================================================== */
 .legend {
   position: fixed !important;
   top: 112px !important;
-  right: 60px !important;            /* Sits directly left of Folium zoom buttons */
+  right: 60px !important;
   bottom: auto !important;
   z-index: 9999 !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.96) !important;
   border: 1px solid #222222 !important;
-  border-radius: 2px !important;
-  padding: 5px 8px !important;
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 4px !important;
+  padding: 6px 10px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
 .legend svg {
@@ -396,32 +512,25 @@ body {
   font-family: 'Helvetica Neue', Arial, sans-serif !important;
 }
 
-/* 4. Tooltip Font Formatting */
-.leaflet-tooltip tr:nth-child(3) th,
-.leaflet-tooltip tr:nth-child(3) td {
-  font-weight: normal !important;
-}
-
-/* Footer Card */
+/* ==========================================================================
+   6. DESKTOP FOOTER
+   ========================================================================== */
 #master-footer-wrapper {
   position: absolute !important;
   bottom: 0 !important;
   width: 100% !important;
   z-index: 1000;
-  /* Keeps panel floating safely over Leaflet map canvas grids */
   background: rgba(255, 255, 255, 0.95);
   margin: 0 !important;
-  padding: 5px 5px 0 5px !important;
+  padding: 6px 10px 2px 10px !important;
   border-top: 3px solid #222222;
   box-shadow: 0px -4px 15px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 10px;
   font-family: Arial, sans-serif;
   pointer-events: auto;
-  /* Re-enables clicking the legal & open-source hyperlinks */
   overflow-y: auto;
-  /* Allows independent vertical scrolling if text squishes on tiny screens */
 }
 
 .footer-column {
@@ -431,18 +540,18 @@ body {
 
 #master-footer-wrapper h4 {
   margin: 0 !important;
-  font-size: 11px;
+  font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #555555;
+  color: #475569;
   font-weight: bold;
 }
 
 #master-footer-wrapper p {
   margin: 0 !important;
-  font-size: 11px;
-  line-height: 14px;
-  color: #222222;
+  font-size: 11.5px;
+  line-height: 15px;
+  color: #1e293b;
 }
 
 #master-footer-wrapper a {
@@ -463,50 +572,48 @@ body {
 }
 
 .footer-bottom p {
-  font-size: 10px !important;
-  color: #666666 !important;
+  font-size: 10.5px !important;
+  color: #64748b !important;
   text-align: center;
 }
 
+/* ==========================================================================
+   7. RESPONSIVE BREAKPOINTS (MOBILE & TABLET)
+   ========================================================================== */
 @media (max-width: 768px) {
-
-  /* 1. Header: Compact font sizes to save vertical space */
   #map-title {
-    font-size: 18px !important;
+    font-size: 20px !important;
   }
 
   #master-footer-wrapper {
     display: none !important;
   }
 
-  /* Bottom-Sheet Sidebar */
   .sidebar {
     width: 100% !important;
     max-width: 100vw !important;
     top: auto !important;
     bottom: 0 !important;
     left: 0 !important;
-    height: 46vh !important;
+    height: 48vh !important;
     border-right: none !important;
     border-top: 2px solid var(--ms-border-muted) !important;
-    border-radius: 14px 14px 0 0;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.45);
     z-index: 1001 !important;
     overflow: visible !important;
   }
 
-  /* Mobile Collapsed State */
   .sidebar.collapsed {
     transform: translateY(100%) !important;
   }
 
-  /* Centered Mobile Pull-Tab */
   .sidebar-toggle-btn {
-    top: -26px !important;
+    top: -28px !important;
     right: 50% !important;
     transform: translateX(50%) !important;
-    width: 68px !important;
-    height: 26px !important;
+    width: 72px !important;
+    height: 28px !important;
     border: 1px solid var(--ms-border-muted) !important;
     border-bottom: none !important;
     border-radius: 8px 8px 0 0 !important;
@@ -522,7 +629,6 @@ body {
     transform: rotate(-90deg);
   }
 
-  /* Compact zoom buttons and legend on phones */
   .leaflet-top.leaflet-left .leaflet-control-zoom {
     top: 90px !important;
     right: 8px !important;
@@ -531,7 +637,7 @@ body {
   .legend {
     top: 90px !important;
     right: 52px !important;
-    transform: scale(0.8);
+    transform: scale(0.85);
     transform-origin: top right;
   }
 }

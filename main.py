@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[9]:
+# In[42]:
 
 
 import geopandas as gpd
@@ -15,7 +15,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[10]:
+# In[43]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -36,7 +36,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[11]:
+# In[44]:
 
 
 # Color scheme
@@ -69,36 +69,36 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[12]:
+# In[45]:
 
 
 # --- Filter Targeted / Impacted Districts ---
-targeted_gdf = gdf[gdf['Targeted'] == True].copy()
+gdf_targeted = gdf[gdf['Targeted'] == True].copy()
 
 # 1. Favored D/R for Targeted Districts Only
-favored_dem = int((targeted_gdf['Margin New'] > 0).sum())
-favored_rep = int((targeted_gdf['Margin New'] < 0).sum())
+favored_dem = int((gdf_targeted['Margin New'] > 0).sum())
+favored_rep = int((gdf_targeted['Margin New'] < 0).sum())
 
-# 2. Aggregated Vote Shares (Across all districts in the 10 states)
-harris_new_pct = f"{gdf['Harris New'].mean() * 100:.1f}%"
-trump_new_pct  = f"{gdf['Trump New'].mean() * 100:.1f}%"
-harris_24_pct  = f"{gdf['Harris 24'].mean() * 100:.1f}%"
-trump_24_pct   = f"{gdf['Trump 24'].mean() * 100:.1f}%"
+# 2. Aggregated Vote Shares (Across all districts in the affected districts)
+harris_new_pct = f"{gdf_targeted['Harris New'].mean() * 100:.1f}%"
+trump_new_pct  = f"{gdf_targeted['Trump New'].mean() * 100:.1f}%"
+harris_24_pct  = f"{gdf_targeted['Harris 24'].mean() * 100:.1f}%"
+trump_24_pct   = f"{gdf_targeted['Trump 24'].mean() * 100:.1f}%"
 
 # 3. Redistricting Metrics Section
 # Mean Partisan Shift (|Δ|) across targeted districts
-mean_shift = f"{targeted_gdf['Margin Shift'].abs().mean() * 100:.1f}%"
+mean_shift = f"{gdf_targeted['Margin Shift'].abs().mean() * 100:.1f}%"
 
 # Median Partisan Lean (|Lean|) across targeted districts
-median_lean = f"{targeted_gdf['Margin New'].abs().median() * 100:.1f}%"
+median_lean = f"{gdf_targeted['Margin New'].abs().median() * 100:.1f}%"
 
 # Net Shift: Mean shift of all affected districts (directional)
 # In your data: positive Margin Shift indicates Democratic gain, negative indicates Republican gain
-raw_net_shift = targeted_gdf['Margin Shift'].mean() * 100
+raw_net_shift = gdf_targeted['Margin Shift'].mean() * 100
 net_shift = f"{'D +' if raw_net_shift > 0 else 'R +'}{abs(raw_net_shift):.2f}%"
 
 # Median Impacted District: Targeted district with the median margin lean
-sorted_targeted = targeted_gdf.sort_values(by='Margin New', ascending=True).reset_index(drop=True)
+sorted_targeted = gdf_targeted.sort_values(by='Margin New', ascending=True).reset_index(drop=True)
 median_impacted_idx = len(sorted_targeted) // 2
 median_impacted_name = sorted_targeted.loc[median_impacted_idx, 'District']
 median_impacted_margin_val = sorted_targeted.loc[median_impacted_idx, 'Margin New'] * 100
@@ -136,15 +136,15 @@ sidebar_context = {
 }
 
 
-# In[13]:
+# In[46]:
 
 
 # Define static assets and variable
 # Title card and navigation
-HEADER_HTML_CONTENT = open('./components/header.html', encoding='utf-8').read()
+HEADER_HTML_CONTENT = open('./src/components/header.html', encoding='utf-8').read()
 
 # Sidebar
-with open('./components/sidebar.html', 'r', encoding='utf-8') as f:
+with open('./src/components/sidebar.html', 'r', encoding='utf-8') as f:
     sidebar_template = f.read()
 
 for key, value in sidebar_context.items():
@@ -153,12 +153,12 @@ for key, value in sidebar_context.items():
 SIDEBAR_HTML_CONTENT = sidebar_template
 
 # Footer / copyright
-FOOTER_HTML_CONTENT = open('./components/footer.html', encoding='utf-8').read()
+FOOTER_HTML_CONTENT = open('./src/components/footer.html', encoding='utf-8').read()
 
 # Scripts and styling
-with open('./docs/static/style.css', 'r', encoding='utf-8') as f:
+with open('./src/static/style.css', 'r', encoding='utf-8') as f:
     css = f.read()
-with open('./docs/static/scripts.js', 'r', encoding='utf-8') as f:
+with open('./src/static/scripts.js', 'r', encoding='utf-8') as f:
     scripts = f.read()
 
 # Legend parameters 
@@ -179,6 +179,10 @@ MAP_OPTIONS = {
     'min_long': center[1]-30,
     'max_long': center[1]+35,
 }
+
+
+# In[47]:
+
 
 # Main function for map initialization and compilation
 def compile_map(filename, target_column, tooltip_config, legend_caption):
@@ -262,7 +266,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[14]:
+# In[48]:
 
 
 # Tooltips on hover
@@ -281,7 +285,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[15]:
+# In[49]:
 
 
 # Compile margin lean map
@@ -293,7 +297,7 @@ compile_map(
 )
 
 
-# In[16]:
+# In[50]:
 
 
 # Compile margin shift map

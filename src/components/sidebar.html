@@ -7,110 +7,103 @@
   </button>
 
   <div class="sidebar-content" id="sidebar-content" tabindex="0">
-    <!-- Header Module: Targeted District Seat Balance -->
+    <!-- Header Module: National Overview -->
     <div class="sidebar-header">
-      <div class="region-title" id="sb-region-title">Statewide Impact</div>
-      <div class="region-subtitle" id="sb-region-subtitle">Overview Across Targeted Districts</div>
+      <div class="region-title" id="sb-region-title">National Overview</div>
+      <div class="region-caption">Number of Districts Changed to Flip</div>
 
-      <div style="display: flex; gap: 10px; margin-top: 12px;">
-        <div
-          style="flex: 1; background: rgba(37, 99, 235, 0.18); border: 1px solid var(--ms-dem-blue); border-radius: 6px; padding: 8px 6px; text-align: center;">
-          <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--ms-text-muted); font-weight: 600;">
-            Favored D</div>
-          <div style="font-size: 1.35rem; font-weight: 800; color: #60a5fa;" id="sb-favored-dem">{favored_dem}</div>
+      <div class="seat-balance-container">
+        <div class="seat-badge dem">
+          <div class="seat-badge-label">Shifted Towards Dems</div>
+          <div class="seat-badge-value" id="sb-favored-dem">{favored_dem}</div>
         </div>
-        <div
-          style="flex: 1; background: rgba(220, 38, 38, 0.18); border: 1px solid var(--ms-rep-red); border-radius: 6px; padding: 8px 6px; text-align: center;">
-          <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--ms-text-muted); font-weight: 600;">
-            Favored R</div>
-          <div style="font-size: 1.35rem; font-weight: 800; color: #f87171;" id="sb-favored-rep">{favored_rep}</div>
+        <div class="seat-badge rep">
+          <div class="seat-badge-label">Shifted Towards GOP</div>
+          <div class="seat-badge-value" id="sb-favored-rep">{favored_rep}</div>
         </div>
       </div>
     </div>
 
-    <!-- Mean Vote Share: Old vs New Boundaries Across Impacted Districts -->
+    <!-- Mean Presidential Vote Share of Impacted Districts -->
     <div class="data-section">
-      <div class="section-title">Mean Impacted Vote Share</div>
+      <div class="section-title">Mean Presidential Vote Share of Impacted Districts</div>
 
-      <!-- New Boundaries Breakdown -->
-      <div style="font-size: 0.82rem; color: #cbd5e1; margin-bottom: 8px; font-weight: 600;">2026 Redistricted Lines
-        (Post)</div>
-      <div class="candidate-row">
+      <!-- New Boundaries (Primary emphasis) -->
+      <div class="candidate-row prominent">
         <div class="candidate-info">
-          <div class="party-indicator dem"></div>
-          <div class="candidate-name">Harris (New)</div>
+          <div class="party-indicator dem prominent"></div>
+          <div class="candidate-name prominent">Harris (New Boundaries)</div>
         </div>
         <div class="vote-data">
-          <div class="vote-percentage" id="sb-harris-new-pct">{harris_new_pct}</div>
+          <div class="vote-percentage prominent" id="sb-harris-new-pct">{harris_new_pct}</div>
         </div>
       </div>
 
-      <div class="candidate-row">
+      <div class="candidate-row prominent">
         <div class="candidate-info">
-          <div class="party-indicator rep"></div>
-          <div class="candidate-name">Trump (New)</div>
+          <div class="party-indicator rep prominent"></div>
+          <div class="candidate-name prominent">Trump (New Boundaries)</div>
         </div>
         <div class="vote-data">
-          <div class="vote-percentage" id="sb-trump-new-pct">{trump_new_pct}</div>
+          <div class="vote-percentage prominent" id="sb-trump-new-pct">{trump_new_pct}</div>
         </div>
       </div>
-      <div class="margin-bar" style="margin-bottom: 16px;">
+
+      <div class="margin-bar">
         <div class="bar-fill dem" id="sb-bar-dem-new" data-width="{harris_new_pct}"></div>
         <div class="bar-fill rep" id="sb-bar-rep-new" data-width="{trump_new_pct}"></div>
       </div>
 
-      <!-- Prior Boundaries Breakdown -->
-      <div style="font-size: 0.82rem; color: #cbd5e1; margin-bottom: 8px; font-weight: 600;">2024 Prior Lines (Pre)
-      </div>
-      <div class="candidate-row">
+      <!-- Prior Lines (Subordinate comparison) -->
+      <div class="candidate-row prior-cycle">
         <div class="candidate-info">
-          <div class="party-indicator dem" style="opacity: 0.7;"></div>
-          <div class="candidate-name" style="color: var(--ms-text-muted);">Harris (2024)</div>
+          <div class="party-indicator dem muted"></div>
+          <div class="candidate-name muted">Harris (2024)</div>
         </div>
         <div class="vote-data">
-          <div class="vote-percentage" style="font-size: 1.1rem; color: var(--ms-text-muted);" id="sb-harris-24-pct">
-            {harris_24_pct}</div>
+          <div class="vote-percentage muted" id="sb-harris-24-pct">{harris_24_pct}</div>
         </div>
       </div>
-      <div class="candidate-row">
+
+      <div class="candidate-row prior-cycle">
         <div class="candidate-info">
-          <div class="party-indicator rep" style="opacity: 0.7;"></div>
-          <div class="candidate-name" style="color: var(--ms-text-muted);">Trump (2024)</div>
+          <div class="party-indicator rep muted"></div>
+          <div class="candidate-name muted">Trump (2024)</div>
         </div>
         <div class="vote-data">
-          <div class="vote-percentage" style="font-size: 1.1rem; color: var(--ms-text-muted);" id="sb-trump-24-pct">
-            {trump_24_pct}</div>
+          <div class="vote-percentage muted" id="sb-trump-24-pct">{trump_24_pct}</div>
         </div>
       </div>
     </div>
 
-    <!-- Redistricting Metrics Module -->
+    <!-- Topline Stats Module -->
     <div class="data-section">
-      <div class="section-title">Redistricting Metrics</div>
+      <div class="section-title">Topline Redistricting Stats of Impacted Districts</div>
       <div class="demo-grid">
 
-        <!-- Mean Partisan Shift -->
         <div class="demo-card">
           <div class="demo-label">Mean Partisan Shift</div>
           <div class="demo-value" id="sb-mean-shift">{mean_shift}</div>
+          <div class="demo-sublabel">Towards Dominant Party</div>
         </div>
 
-        <!-- Median Partisan Lean -->
         <div class="demo-card">
           <div class="demo-label">Median Partisan Lean</div>
           <div class="demo-value" id="sb-median-lean">{median_lean}</div>
         </div>
 
-        <!-- Net Shift -->
         <div class="demo-card">
-          <div class="demo-label">Net Shift</div>
+          <div class="demo-label">Mean Partisan Shift (Net)</div>
           <div class="demo-value" style="color: #f87171;" id="sb-net-shift">{net_shift}</div>
         </div>
 
-        <!-- Median Impacted District -->
+        <!-- Color-Coded Median Impacted District -->
         <div class="demo-card">
           <div class="demo-label">Median Impacted Dist.</div>
-          <div class="demo-value" style="font-size: 1.05rem;" id="sb-median-impacted">{median_impacted_val}</div>
+          <div class="demo-value median-impacted-val {median_impacted_class}" id="sb-median-impacted">
+            <span class="district-code">{median_impacted_dist}</span>,
+            <span class="lean-value">{median_impacted_lean}</span>
+          </div>
         </div>
 
       </div>
@@ -120,29 +113,22 @@
     <div class="data-section">
       <div class="section-title">Tipping Point Districts</div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <div class="tipping-row">
         <div>
-          <div style="font-size: 0.95rem; font-weight: 600; color: var(--ms-text-main);" id="sb-tipping-new-name">
-            {tipping_new_name}</div>
-          <div style="font-size: 0.8rem; color: var(--ms-text-muted);">Post-Redistricting (New)</div>
+          <div class="tipping-name" id="sb-tipping-new-name">{tipping_new_name}</div>
+          <div class="tipping-sub">Post-Redistricting (New)</div>
         </div>
-        <div style="text-align: right;">
-          <span style="font-size: 1.05rem; font-weight: 700; color: #60a5fa;"
-            id="sb-tipping-new-margin">{tipping_new_margin}</span>
-        </div>
+        <div class="tipping-margin" id="sb-tipping-new-margin">{tipping_new_margin}</div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="tipping-row">
         <div>
-          <div style="font-size: 0.95rem; font-weight: 600; color: var(--ms-text-muted);" id="sb-tipping-old-name">
-            {tipping_old_name}</div>
-          <div style="font-size: 0.8rem; color: var(--ms-text-muted);">Prior Lines (2024)</div>
+          <div class="tipping-name muted" id="sb-tipping-old-name">{tipping_old_name}</div>
+          <div class="tipping-sub">Prior Lines (2024)</div>
         </div>
-        <div style="text-align: right;">
-          <span style="font-size: 1.05rem; font-weight: 700; color: var(--ms-text-muted);"
-            id="sb-tipping-old-margin">{tipping_old_margin}</span>
-        </div>
+        <div class="tipping-margin muted" id="sb-tipping-old-margin">{tipping_old_margin}</div>
       </div>
     </div>
+
   </div>
 </div>
