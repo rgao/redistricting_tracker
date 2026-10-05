@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[15]:
+# In[1]:
 
 
 import os
@@ -42,7 +42,7 @@ states_gdf = pd.concat(all_gdfs, ignore_index=True)
 states_gdf.head(8)
 
 
-# In[16]:
+# In[2]:
 
 
 # 2024 presidential results by Congressional district
@@ -58,7 +58,7 @@ merged_gdf = states_gdf.merge(pres24, on='District', how='inner')
 merged_gdf.head(8)
 
 
-# In[17]:
+# In[3]:
 
 
 # rename columns
@@ -75,7 +75,7 @@ gdf_clean = merged_gdf.rename(columns={
 gdf_clean.head(8)
 
 
-# In[18]:
+# In[4]:
 
 
 # Create new columns converting the raw votes into percentages, as well as show the percent margin difference
@@ -93,17 +93,22 @@ gdf_clean['Margin Shift'] = gdf_clean['Margin New'] - gdf_clean['Margin 24']
 gdf_clean.head()
 
 
-# In[19]:
+# In[5]:
 
 
-# Column to indicate districts targeted by redistricting
+# Implement column to flag districts targeted by redistricting
+# 1. Base rule: Districts where winning party flipped
 gdf_clean['Targeted'] = (gdf_clean['Margin New'] * gdf_clean['Margin 24']) < 0
 
-# Manually set targeted districts not covered by the above process
-targeted_districts = ['NC01', 'OH09', 'TX28', 'TX34']
-for district in targeted_districts:
-    row_index = gdf_clean[gdf_clean['District'] == district].index
-    gdf_clean.loc[row_index, 'Targeted'] = True
+# Explicitly ensure boolean dtype to prevent dtype warnings
+gdf_clean['Targeted'] = gdf_clean['Targeted'].astype(bool)
+
+# 2. Exclude CA09
+gdf_clean.loc[gdf_clean['District'] == 'CA09', 'Targeted'] = False
+
+# 3. Additional targeted districts
+targeted_additions = ['NC01', 'OH09', 'TX28', 'TX34']
+gdf_clean.loc[gdf_clean['District'].isin(targeted_additions), 'Targeted'] = True
 
 # Reorder the columns
 reordered_columns = ['District No.', 'District', 'Harris New', 'Trump New', 'Margin New',

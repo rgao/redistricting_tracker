@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[42]:
+# In[25]:
 
 
-import geopandas as gpd
+import os
+import branca
 import folium
 from folium import plugins
-import branca
+import geopandas as gpd
+import pandas as pd
 
 gdf = gpd.read_file("data/map2026.geojson")
 # Check for EPSG 4326 for folium compatibility
@@ -15,7 +17,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[43]:
+# In[26]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -36,7 +38,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[44]:
+# In[27]:
 
 
 # Color scheme
@@ -69,74 +71,112 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[45]:
+# In[28]:
 
 
 # --- Filter Targeted / Impacted Districts ---
 gdf_targeted = gdf[gdf['Targeted'] == True].copy()
 
-# 1. Favored D/R for Targeted Districts Only
+# 1. Flip / Direction Counts for Targeted Districts
 favored_dem = int((gdf_targeted['Margin New'] > 0).sum())
 favored_rep = int((gdf_targeted['Margin New'] < 0).sum())
 
-# 2. Aggregated Vote Shares (Across all districts in the affected districts)
+# 2. Mean Presidential Vote Share of Impacted Districts
 harris_new_pct = f"{gdf_targeted['Harris New'].mean() * 100:.1f}%"
 trump_new_pct  = f"{gdf_targeted['Trump New'].mean() * 100:.1f}%"
 harris_24_pct  = f"{gdf_targeted['Harris 24'].mean() * 100:.1f}%"
 trump_24_pct   = f"{gdf_targeted['Trump 24'].mean() * 100:.1f}%"
 
-# 3. Redistricting Metrics Section
-# Mean Partisan Shift (|Δ|) across targeted districts
-mean_shift = f"{gdf_targeted['Margin Shift'].abs().mean() * 100:.1f}%"
+# 3. Topline Redistricting Stats
+# Mean Partisan Shift followed by "towards dominant party"
+raw_mean_shift = gdf_targeted['Margin Shift'].abs().mean() * 100
+mean_shift_str = f"{raw_mean_shift:.1f}%"
 
-# Median Partisan Lean (|Lean|) across targeted districts
+# Median Partisan Lean
 median_lean = f"{gdf_targeted['Margin New'].abs().median() * 100:.1f}%"
 
-# Net Shift: Mean shift of all affected districts (directional)
-# In your data: positive Margin Shift indicates Democratic gain, negative indicates Republican gain
+# Mean Partisan Shift (Net)
 raw_net_shift = gdf_targeted['Margin Shift'].mean() * 100
 net_shift = f"{'D +' if raw_net_shift > 0 else 'R +'}{abs(raw_net_shift):.2f}%"
 
-# Median Impacted District: Targeted district with the median margin lean
+# Median Impacted District: Determine value and color class
 sorted_targeted = gdf_targeted.sort_values(by='Margin New', ascending=True).reset_index(drop=True)
-median_impacted_idx = len(sorted_targeted) // 2
-median_impacted_name = sorted_targeted.loc[median_impacted_idx, 'District']
-median_impacted_margin_val = sorted_targeted.loc[median_impacted_idx, 'Margin New'] * 100
-median_impacted_val = f"{median_impacted_name}, {'D +' if median_impacted_margin_val > 0 else 'R +'}{abs(median_impacted_margin_val):.1f}%"
+mid_impacted_idx = len(sorted_targeted) // 2
+median_impacted_name = sorted_targeted.loc[mid_impacted_idx, 'District']
+median_impacted_margin_val = sorted_targeted.loc[mid_impacted_idx, 'Margin New'] * 100
 
-# 4. Tipping Point Districts
-sorted_new = gdf.sort_values(by='Margin New', ascending=True).reset_index(drop=True)
-mid_new = len(sorted_new) // 2
-tipping_new_name = sorted_new.loc[mid_new, 'District']
-val_new = sorted_new.loc[mid_new, 'Margin New'] * 100
-tipping_new_margin = f"{'Harris +' if val_new > 0 else 'Trump +'}{abs(val_new):.1f}%"
+median_impacted_class = "dem" if median_impacted_margin_val > 0 else "rep"
+median_impacted_dist = median_impacted_name
+median_impacted_lean = f"{'D +' if median_impacted_margin_val > 0 else 'R +'} {abs(median_impacted_margin_val):.1f}%"
 
-sorted_24 = gdf.sort_values(by='Margin 24', ascending=True).reset_index(drop=True)
-mid_24 = len(sorted_24) // 2
-tipping_old_name = sorted_24.loc[mid_24, 'District']
-val_24 = sorted_24.loc[mid_24, 'Margin 24'] * 100
-tipping_old_margin = f"{'Harris +' if val_24 > 0 else 'Trump +'}{abs(val_24):.1f}%"
 
-# Updated context dictionary
-sidebar_context = {
-    "favored_dem": favored_dem,
-    "favored_rep": favored_rep,
-    "harris_new_pct": harris_new_pct,
-    "trump_new_pct": trump_new_pct,
-    "harris_24_pct": harris_24_pct,
-    "trump_24_pct": trump_24_pct,
-    "mean_shift": mean_shift,
-    "median_lean": median_lean,
-    "net_shift": net_shift,
-    "median_impacted_val": median_impacted_val,
+# In[29]:
+
+
+# ==============================================================================
+# NATIONAL HOUSE TIPPING POINT CALCULATION
+# ==============================================================================
+house_natl_path = "data/house_2024_national.csv"
+
+if not os.path.exists(house_natl_path):
+    # Try alternative relative path if running from within src/ or root
+    alt_path = "../data/house_2024_national.csv"
+    if os.path.exists(alt_path):
+        house_natl_path = alt_path
+
+if os.path.exists(house_natl_path):
+    house_natl = pd.read_csv(house_natl_path)
+    
+    # Merge national dataset with the newly redrawn district margins
+    house_natl = house_natl.merge(gdf[['District', 'Margin New']], on='District', how='left')
+    
+    # Apply Margin New to redistricted seats; retain 2024 baseline for untouched seats
+    house_natl['Margin_Post'] = house_natl['Margin New'].combine_first(house_natl['Margin_2party'])
+    
+    # 1. Prior Tipping Point (2024 general election baseline)
+    # Sort descending from strongest Dem lean to strongest GOP lean
+    # In a 435-seat chamber, the 218th seat gives the majority (0-indexed position 217)
+    sorted_24 = house_natl.sort_values(by='Margin_2party', ascending=False).reset_index(drop=True)
+    tipping_old_name = sorted_24.loc[217, 'District']
+    val_24 = sorted_24.loc[217, 'Margin_2party'] * 100
+    tipping_old_margin = f"{'D +' if val_24 > 0 else 'R +'}{abs(val_24):.1f}%"
+    tipping_old_class = "dem" if val_24 > 0 else "rep"
+
+    # 2. Post-Redistricting Tipping Point
+    sorted_new = house_natl.sort_values(by='Margin_Post', ascending=False).reset_index(drop=True)
+    tipping_new_name = sorted_new.loc[217, 'District']
+    val_new = sorted_new.loc[217, 'Margin_Post'] * 100
+    tipping_new_margin = f"{'D +' if val_new > 0 else 'R +'}{abs(val_new):.1f}%"
+    tipping_new_class = "dem" if val_new > 0 else "rep"
+
+else:
+    print("WARNING: data/house_2024_national.csv not found! Using fallback.")
+    sorted_new = gdf.sort_values(by='Margin New', ascending=False).reset_index(drop=True)
+    mid_new = len(sorted_new) // 2
+    tipping_new_name = sorted_new.loc[mid_new, 'District']
+    val_new = sorted_new.loc[mid_new, 'Margin New'] * 100
+    tipping_new_margin = f"{'D +' if val_new > 0 else 'R +'}{abs(val_new):.1f}%"
+    tipping_new_class = "dem" if val_new > 0 else "rep"
+
+    sorted_24 = gdf.sort_values(by='Margin 24', ascending=False).reset_index(drop=True)
+    mid_24 = len(sorted_24) // 2
+    tipping_old_name = sorted_24.loc[mid_24, 'District']
+    val_24 = sorted_24.loc[mid_24, 'Margin 24'] * 100
+    tipping_old_margin = f"{'D +' if val_24 > 0 else 'R +'}{abs(val_24):.1f}%"
+    tipping_old_class = "dem" if val_24 > 0 else "rep"
+
+# Update sidebar_context dictionary keys
+sidebar_context.update({
     "tipping_new_name": tipping_new_name,
     "tipping_new_margin": tipping_new_margin,
+    "tipping_new_class": tipping_new_class,
     "tipping_old_name": tipping_old_name,
-    "tipping_old_margin": tipping_old_margin
-}
+    "tipping_old_margin": tipping_old_margin,
+    "tipping_old_class": tipping_old_class
+})
 
 
-# In[46]:
+# In[30]:
 
 
 # Define static assets and variable
@@ -181,7 +221,7 @@ MAP_OPTIONS = {
 }
 
 
-# In[47]:
+# In[31]:
 
 
 # Main function for map initialization and compilation
@@ -266,7 +306,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[48]:
+# In[32]:
 
 
 # Tooltips on hover
@@ -285,7 +325,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[49]:
+# In[33]:
 
 
 # Compile margin lean map
@@ -297,7 +337,7 @@ compile_map(
 )
 
 
-# In[50]:
+# In[34]:
 
 
 # Compile margin shift map
