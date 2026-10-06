@@ -32,7 +32,7 @@
       <div class="candidate-row prominent">
         <div class="candidate-info">
           <div class="party-indicator dem prominent"></div>
-          <div class="candidate-name prominent">Harris (New Boundaries)</div>
+          <div class="candidate-name prominent">Harris (Post-Redistricting Boundaries)</div>
         </div>
         <div class="vote-data">
           <div class="vote-percentage prominent" id="sb-harris-new-pct">{harris_new_pct}</div>
@@ -42,7 +42,7 @@
       <div class="candidate-row prominent">
         <div class="candidate-info">
           <div class="party-indicator rep prominent"></div>
-          <div class="candidate-name prominent">Trump (New Boundaries)</div>
+          <div class="candidate-name prominent">Trump (Post-Redistricting Boundaries)</div>
         </div>
         <div class="vote-data">
           <div class="vote-percentage prominent" id="sb-trump-new-pct">{trump_new_pct}</div>
@@ -58,7 +58,7 @@
       <div class="candidate-row prior-cycle">
         <div class="candidate-info">
           <div class="party-indicator dem muted"></div>
-          <div class="candidate-name muted">Harris (2024)</div>
+          <div class="candidate-name muted">Harris (2024 Boundaries)</div>
         </div>
         <div class="vote-data">
           <div class="vote-percentage muted" id="sb-harris-24-pct">{harris_24_pct}</div>
@@ -68,7 +68,7 @@
       <div class="candidate-row prior-cycle">
         <div class="candidate-info">
           <div class="party-indicator rep muted"></div>
-          <div class="candidate-name muted">Trump (2024)</div>
+          <div class="candidate-name muted">Trump (2024 Boundaries)</div>
         </div>
         <div class="vote-data">
           <div class="vote-percentage muted" id="sb-trump-24-pct">{trump_24_pct}</div>
@@ -97,22 +97,22 @@
         <!-- Box 3 -->
         <div class="demo-card">
           <div class="demo-label">Mean Partisan Shift (Net)</div>
-          <div class="demo-value net-shift-val" id="sb-net-shift">{net_shift}</div>
+          <div class="demo-value net-shift-val {net_shift_class}" id="sb-net-shift">{net_shift}</div>
         </div>
 
         <!-- Box 4 -->
         <div class="demo-card">
           <div class="demo-label">Median Impacted Dist.</div>
           <div class="demo-value median-impacted-val {median_impacted_class}" id="sb-median-impacted">
-            <span class="district-code">{median_impacted_dist}</span>,&nbsp;
-            <span class="lean-value">{median_impacted_lean}</span>
+            <span class="district-code">{median_impacted_dist}</span>,&nbsp;<span
+              class="lean-value">{median_impacted_lean}</span>
           </div>
         </div>
 
       </div>
     </div>
 
-    <!-- Tipping Point Districts -->
+    <!-- Tipping Point Districts Module -->
     <div class="data-section">
       <div class="section-title">Tipping Point Districts</div>
 
@@ -131,7 +131,15 @@
         </div>
         <div class="tipping-margin {tipping_old_class} muted" id="sb-tipping-old-margin">{tipping_old_margin}</div>
       </div>
-    </div>
 
+      <!-- Generic Congressional Ballot Advantage -->
+      <div class="tipping-row generic-ballot-row">
+        <div>
+          <div class="tipping-name">Generic Ballot Advantage</div>
+          <div class="tipping-sub">Seat Bias vs. Popular Vote</div>
+        </div>
+        <div class="tipping-margin {ballot_adv_class}" id="sb-ballot-adv">{ballot_adv_display}</div>
+      </div>
+    </div>
   </div>
 </div>

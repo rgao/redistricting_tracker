@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[25]:
+# In[35]:
 
 
 import os
@@ -17,7 +17,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[26]:
+# In[36]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -38,7 +38,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[27]:
+# In[37]:
 
 
 # Color scheme
@@ -71,7 +71,7 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[28]:
+# In[38]:
 
 
 # --- Filter Targeted / Impacted Districts ---
@@ -110,7 +110,7 @@ median_impacted_dist = median_impacted_name
 median_impacted_lean = f"{'D +' if median_impacted_margin_val > 0 else 'R +'} {abs(median_impacted_margin_val):.1f}%"
 
 
-# In[29]:
+# In[39]:
 
 
 # ==============================================================================
@@ -176,7 +176,7 @@ sidebar_context.update({
 })
 
 
-# In[30]:
+# In[40]:
 
 
 # Define static assets and variable
@@ -221,7 +221,7 @@ MAP_OPTIONS = {
 }
 
 
-# In[31]:
+# In[41]:
 
 
 # Main function for map initialization and compilation
@@ -306,7 +306,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[32]:
+# In[42]:
 
 
 # Tooltips on hover
@@ -325,7 +325,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[33]:
+# In[43]:
 
 
 # Compile margin lean map
@@ -337,7 +337,7 @@ compile_map(
 )
 
 
-# In[34]:
+# In[44]:
 
 
 # Compile margin shift map

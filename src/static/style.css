@@ -392,8 +392,9 @@ body {
 }
 
 /* ==========================================================================
-   TOPLINE STATS GRID & RIGID ALIGNMENT FIX
+   TOPLINE STATS GRID
    ========================================================================== */
+
 .sidebar .demo-grid {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
@@ -402,52 +403,67 @@ body {
 
 .sidebar .demo-card {
   background-color: var(--ms-bg-surface) !important;
-  padding: 12px 10px 10px 10px !important;
+  padding: 12px 12px 10px 12px !important;
   border-radius: 8px !important;
   border: 1px solid var(--ms-border-muted) !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
-  height: 106px !important;
+  height: 110px !important;
+  /* Slightly adjusted height for larger fonts */
   box-sizing: border-box !important;
 }
 
+/* Card Labels: Scaled up to 0.98rem */
 .sidebar .demo-label {
-  font-size: 0.88rem !important;
-  color: #cbd5e1 !important;
-  font-weight: 600 !important;
+  font-size: 0.98rem !important;
+  /* Bumped up from 0.88rem */
+  color: #e2e8f0 !important;
+  font-weight: 700 !important;
   line-height: 1.25 !important;
-  height: 32px !important;
+  height: 36px !important;
+  /* Preserves exact baseline lock across cards */
   display: flex !important;
   align-items: flex-start !important;
   margin-bottom: 6px !important;
 }
 
+/* Stat Numbers: Scaled up to 1.55rem (Boxes 1, 2, 3) */
 .sidebar .demo-value {
-  font-size: 1.32rem !important;
+  font-size: 1.55rem !important;
+  /* Bumped up from 1.32rem */
   font-weight: 800 !important;
   color: var(--ms-text-main) !important;
-  line-height: 1.15 !important;
+  line-height: 1.1 !important;
   display: flex !important;
   align-items: baseline !important;
   white-space: nowrap !important;
 }
 
+/* Box 1 sublabel */
 .demo-sublabel {
-  font-size: 0.72rem !important;
+  font-size: 0.8rem !important;
+  /* Bumped up from 0.72rem */
   color: #94a3b8 !important;
   text-transform: capitalize;
-  margin-top: 3px !important;
-  font-weight: 500 !important;
+  margin-top: 4px !important;
+  font-weight: 600 !important;
   line-height: 1.2 !important;
 }
 
-.net-shift-val {
-  color: #f87171 !important;
+/* Box 3 Net Shift Dynamic Colors */
+.net-shift-val.dem {
+  color: #60a5fa !important;  /* Democratic Blue */
 }
 
+.net-shift-val.rep {
+  color: #f87171 !important;  /* Republican Red */
+}
+
+/* Box 4: Median Impacted District */
 .median-impacted-val {
-  font-size: 1.15rem !important;
+  font-size: 1.3rem !important;
+  /* Scaled up from 1.15rem */
   font-weight: 800 !important;
 }
 
@@ -464,45 +480,73 @@ body {
 }
 
 /* ==========================================================================
-   TIPPING POINT MODULE
+   TIPPING POINT MODULE (ENLARGED TYPOGRAPHY & PARTY PALETTE)
    ========================================================================== */
+
 .tipping-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 16px !important;
 }
 
 .tipping-row:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
 }
 
+.generic-ballot-row {
+  margin-top: 14px !important;
+  padding-top: 12px !important;
+  border-top: 1px dashed var(--ms-border-muted) !important;
+}
+
+/* District / Metric Names */
 .tipping-name {
-  font-size: 1.15rem !important;
-  font-weight: 700 !important;
-  color: var(--ms-text-main);
+  font-size: 1.35rem !important;
+  /* Bumped up from 1.15rem */
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.2 !important;
 }
 
 .tipping-sub {
-  font-size: 0.88rem !important;
-  color: var(--ms-text-muted);
-  margin-top: 2px;
+  font-size: 0.95rem !important;
+  /* Bumped up from 0.88rem */
+  color: #cbd5e1 !important;
+  margin-top: 3px !important;
+  font-weight: 500 !important;
 }
 
+/* Margins & Metrics */
 .tipping-margin {
-  font-size: 1.3rem !important;
+  font-size: 1.55rem !important;
+  /* Bumped up from 1.3rem */
   font-weight: 800 !important;
-  color: #60a5fa;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
 }
 
+/* Dynamic Party Coloring */
+.tipping-margin.dem {
+  color: #60a5fa !important;
+  /* Democratic Blue */
+}
+
+.tipping-margin.rep {
+  color: #f87171 !important;
+  /* Republican Red */
+}
+
+/* Prior Lines Muted Styling */
 .tipping-name.muted {
   color: #94a3b8 !important;
   font-weight: 600 !important;
 }
 
 .tipping-margin.muted {
-  color: #94a3b8 !important;
-  font-size: 1.2rem !important;
+  font-size: 1.35rem !important;
+  opacity: 0.85 !important;
 }
 
 /* ==========================================================================
