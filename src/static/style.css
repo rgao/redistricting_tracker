@@ -35,10 +35,28 @@ body {
   z-index: 1;
 }
 
-/* Tooltip typography */
-.leaflet-tooltip tr:nth-child(3) th,
-.leaflet-tooltip tr:nth-child(3) td {
-  font-weight: normal !important;
+/* Tooltip Typography & Alignment */
+.leaflet-tooltip {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 13px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22) !important;
+}
+
+.leaflet-tooltip table {
+  border-collapse: collapse;
+}
+
+.leaflet-tooltip th {
+  padding-right: 12px !important;
+  text-align: left !important;
+  color: #1e293b !important;
+}
+
+.leaflet-tooltip td {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ==========================================================================
@@ -223,13 +241,13 @@ body {
   color: #f8fafc !important;
   line-height: 1.15 !important;
   text-transform: capitalize;
+  margin-bottom: 6px !important;
 }
 
 .region-caption {
   font-size: 1.05rem !important;
   color: #cbd5e1 !important;
   text-transform: capitalize;
-  margin-top: 6px !important;
   font-weight: 600 !important;
 }
 
@@ -284,15 +302,40 @@ body {
   border-bottom: 1px solid var(--ms-border-muted);
 }
 
+/* Standard Section Title (for sections WITHOUT a subtitle, e.g. Mean Presidential Vote Share) */
 .sidebar .section-title {
   font-size: 1.25rem !important;
   text-transform: capitalize;
   letter-spacing: -0.01em !important;
   color: #ffffff !important;
-  margin-bottom: 16px !important;
+  margin-top: 0 !important;
+  margin-bottom: 16px !important;       /* Clean, uniform separation above content */
   font-weight: 800 !important;
   display: block;
   line-height: 1.3 !important;
+}
+
+/* Container for sections WITH a subtitle */
+.sidebar .section-title-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;                 /* Controlled 4px vertical distance between title & subtitle */
+  margin-bottom: 16px !important;      /* Clean, uniform separation above the cards */
+}
+
+/* Reset individual title margin when wrapped inside the group */
+.sidebar .section-title-group .section-title {
+  margin-bottom: 0 !important;
+}
+
+/* Subtitle Styling */
+.sidebar .section-subtitle {
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  display: block;
 }
 
 /* Candidate Row Breakdown */

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[17]:
 
 
 import os
@@ -34,7 +34,8 @@ for state in file_inputs:
     # Create matching key for the geojson/csv files with state postal and district number
     gdf["District"] = state["postal"] + gdf["id"].astype(str).str.zfill(2)
     
-    gdf = gdf[["id", "District", "DemPct", "RepPct", "Margin","geometry"]]
+    gdf = gdf[["id", "District", "DemPct", "RepPct", "WhitePct", "MinorityPct", "BlackPct",
+       "HispanicPct", "AsianPct", "Margin","geometry"]]
     
     all_gdfs.append(gdf)
 
@@ -42,7 +43,7 @@ states_gdf = pd.concat(all_gdfs, ignore_index=True)
 states_gdf.head(8)
 
 
-# In[2]:
+# In[18]:
 
 
 # 2024 presidential results by Congressional district
@@ -58,7 +59,7 @@ merged_gdf = states_gdf.merge(pres24, on='District', how='inner')
 merged_gdf.head(8)
 
 
-# In[3]:
+# In[19]:
 
 
 # rename columns
@@ -75,7 +76,7 @@ gdf_clean = merged_gdf.rename(columns={
 gdf_clean.head(8)
 
 
-# In[4]:
+# In[20]:
 
 
 # Create new columns converting the raw votes into percentages, as well as show the percent margin difference
@@ -93,30 +94,44 @@ gdf_clean['Margin Shift'] = gdf_clean['Margin New'] - gdf_clean['Margin 24']
 gdf_clean.head()
 
 
-# In[5]:
+# In[21]:
 
 
-# Implement column to flag districts targeted by redistricting
 # 1. Base rule: Districts where winning party flipped
-gdf_clean['Targeted'] = (gdf_clean['Margin New'] * gdf_clean['Margin 24']) < 0
-
-# Explicitly ensure boolean dtype to prevent dtype warnings
-gdf_clean['Targeted'] = gdf_clean['Targeted'].astype(bool)
+gdf_clean["Targeted"] = (gdf_clean["Margin New"] * gdf_clean["Margin 24"]) < 0
+gdf_clean["Targeted"] = gdf_clean["Targeted"].astype(bool)
 
 # 2. Exclude CA09
-gdf_clean.loc[gdf_clean['District'] == 'CA09', 'Targeted'] = False
+gdf_clean.loc[gdf_clean["District"] == "CA09", "Targeted"] = False
 
 # 3. Additional targeted districts
-targeted_additions = ['NC01', 'OH09', 'TX28', 'TX34']
-gdf_clean.loc[gdf_clean['District'].isin(targeted_additions), 'Targeted'] = True
+targeted_additions = ["NC01", "OH09", "TX28", "TX34"]
+gdf_clean.loc[gdf_clean["District"].isin(targeted_additions), "Targeted"] = True
 
-# Reorder the columns
-reordered_columns = ['District No.', 'District', 'Harris New', 'Trump New', 'Margin New',
-                    'Margin Shift', 'Partisan Index', 'Harris 24', 'Trump 24', 'Margin 24', 
-                    'Targeted', 'geometry']
+# Reorder columns: race/VAP statistics placed directly after District
+reordered_columns = [
+    "District No.",
+    "District",
+    "WhitePct",
+    "MinorityPct",
+    "BlackPct",
+    "HispanicPct",
+    "AsianPct",
+    "Harris New",
+    "Trump New",
+    "Margin New",
+    "Margin Shift",
+    "Partisan Index",
+    "Harris 24",
+    "Trump 24",
+    "Margin 24",
+    "Targeted",
+    "geometry",
+]
 
 gdf_clean = gdf_clean[reordered_columns]
 
-gdf_clean.to_file("../data/map2026.geojson", driver='GeoJSON')
+# Export updated GeoJSON
+gdf_clean.to_file("../data/map2026.geojson", driver="GeoJSON")
 gdf_clean.head(16)
 
