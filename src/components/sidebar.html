@@ -7,142 +7,223 @@
   </button>
 
   <div class="sidebar-content" id="sidebar-content" tabindex="0">
-    <!-- Header Module: National Overview -->
-    <div class="sidebar-header">
-      <div class="region-title" id="sb-region-title">National Overview</div>
-      <div class="region-caption">Number of Districts Changed to Flip</div>
+    <div id="sidebar-default-view">
+      <!-- Header Module: National Overview -->
+      <div class="sidebar-header">
+        <div class="region-title" id="sb-region-title">National Overview</div>
+        <div class="region-caption">Number of Districts Changed to Flip</div>
 
-      <div class="seat-balance-container">
-        <div class="seat-badge dem">
-          <div class="seat-badge-label">Shifted Towards Dems</div>
-          <div class="seat-badge-value" id="sb-favored-dem">{favored_dem}</div>
-        </div>
-        <div class="seat-badge rep">
-          <div class="seat-badge-label">Shifted Towards GOP</div>
-          <div class="seat-badge-value" id="sb-favored-rep">{favored_rep}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mean Presidential Vote Share of Impacted Districts -->
-    <div class="data-section">
-      <div class="section-title">Mean Presidential Vote Share of Targeted Districts</div>
-
-      <!-- New Boundaries (Primary emphasis) -->
-      <div class="candidate-row prominent">
-        <div class="candidate-info">
-          <div class="party-indicator dem prominent"></div>
-          <div class="candidate-name prominent">Harris (Post-Redistricting Boundaries)</div>
-        </div>
-        <div class="vote-data">
-          <div class="vote-percentage prominent" id="sb-harris-new-pct">{harris_new_pct}</div>
+        <div class="seat-balance-container">
+          <div class="seat-badge dem">
+            <div class="seat-badge-label">Shifted Towards Dems</div>
+            <div class="seat-badge-value" id="sb-favored-dem">{favored_dem}</div>
+          </div>
+          <div class="seat-badge rep">
+            <div class="seat-badge-label">Shifted Towards GOP</div>
+            <div class="seat-badge-value" id="sb-favored-rep">{favored_rep}</div>
+          </div>
         </div>
       </div>
 
-      <div class="candidate-row prominent">
-        <div class="candidate-info">
-          <div class="party-indicator rep prominent"></div>
-          <div class="candidate-name prominent">Trump (Post-Redistricting Boundaries)</div>
-        </div>
-        <div class="vote-data">
-          <div class="vote-percentage prominent" id="sb-trump-new-pct">{trump_new_pct}</div>
-        </div>
-      </div>
+      <!-- Mean Presidential Vote Share of Impacted Districts -->
+      <div class="data-section">
+        <div class="section-title">Mean Presidential Vote Share of Targeted Districts</div>
 
-      <div class="margin-bar">
-        <div class="bar-fill dem" id="sb-bar-dem-new" data-width="{harris_new_pct}"></div>
-        <div class="bar-fill rep" id="sb-bar-rep-new" data-width="{trump_new_pct}"></div>
-      </div>
-
-      <!-- Prior Lines (Subordinate comparison) -->
-      <div class="candidate-row prior-cycle">
-        <div class="candidate-info">
-          <div class="party-indicator dem muted"></div>
-          <div class="candidate-name muted">Harris (2024 Boundaries)</div>
-        </div>
-        <div class="vote-data">
-          <div class="vote-percentage muted" id="sb-harris-24-pct">{harris_24_pct}</div>
-        </div>
-      </div>
-
-      <div class="candidate-row prior-cycle">
-        <div class="candidate-info">
-          <div class="party-indicator rep muted"></div>
-          <div class="candidate-name muted">Trump (2024 Boundaries)</div>
-        </div>
-        <div class="vote-data">
-          <div class="vote-percentage muted" id="sb-trump-24-pct">{trump_24_pct}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Topline Stats Module -->
-    <div class="data-section">
-      <div class="section-title-group">
-        <div class="section-title">Impact On Targeted Districts</div>
-        <div class="section-subtitle">Using 2024 Presidential Vote Share</div>
-      </div>
-
-      <div class="demo-grid">
-        <!-- Box 1 -->
-        <div class="demo-card">
-          <div class="demo-label">Mean Partisan Shift</div>
-          <div class="demo-value" id="sb-mean-shift">{mean_shift}</div>
-          <div class="demo-sublabel">Towards intended Party</div>
-        </div>
-
-        <!-- Box 2 -->
-        <div class="demo-card">
-          <div class="demo-label">Median Partisan Lean</div>
-          <div class="demo-value" id="sb-median-lean">{median_lean}</div>
-          <div class="demo-sublabel">Favoring intended Party</div>
-        </div>
-
-        <!-- Box 3 -->
-        <div class="demo-card">
-          <div class="demo-label">Mean Partisan Shift (Net)</div>
-          <div class="demo-value net-shift-val {net_shift_class}" id="sb-net-shift">{net_shift}</div>
-        </div>
-
-        <!-- Box 4 -->
-        <div class="demo-card">
-          <div class="demo-label">Median New District</div>
-          <div class="demo-value median-impacted-val {median_impacted_class}" id="sb-median-impacted">
-            <span class="district-code">{median_impacted_dist}</span>,&nbsp;<span
-              class="lean-value">{median_impacted_lean}</span>
+        <!-- New Boundaries (Primary emphasis) -->
+        <div class="candidate-row prominent">
+          <div class="candidate-info">
+            <div class="party-indicator dem prominent"></div>
+            <div class="candidate-name prominent">Harris (Post-Redistricting Boundaries)</div>
+          </div>
+          <div class="vote-data">
+            <div class="vote-percentage prominent" id="sb-harris-new-pct">{harris_new_pct}</div>
           </div>
         </div>
 
+        <div class="candidate-row prominent">
+          <div class="candidate-info">
+            <div class="party-indicator rep prominent"></div>
+            <div class="candidate-name prominent">Trump (Post-Redistricting Boundaries)</div>
+          </div>
+          <div class="vote-data">
+            <div class="vote-percentage prominent" id="sb-trump-new-pct">{trump_new_pct}</div>
+          </div>
+        </div>
+
+        <div class="margin-bar">
+          <div class="bar-fill dem" id="sb-bar-dem-new" data-width="{harris_new_pct}"></div>
+          <div class="bar-fill rep" id="sb-bar-rep-new" data-width="{trump_new_pct}"></div>
+        </div>
+
+        <!-- Prior Lines (Subordinate comparison) -->
+        <div class="candidate-row prior-cycle">
+          <div class="candidate-info">
+            <div class="party-indicator dem muted"></div>
+            <div class="candidate-name muted">Harris (2024 Boundaries)</div>
+          </div>
+          <div class="vote-data">
+            <div class="vote-percentage muted" id="sb-harris-24-pct">{harris_24_pct}</div>
+          </div>
+        </div>
+
+        <div class="candidate-row prior-cycle">
+          <div class="candidate-info">
+            <div class="party-indicator rep muted"></div>
+            <div class="candidate-name muted">Trump (2024 Boundaries)</div>
+          </div>
+          <div class="vote-data">
+            <div class="vote-percentage muted" id="sb-trump-24-pct">{trump_24_pct}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Topline Stats Module -->
+      <div class="data-section">
+        <div class="section-title-group">
+          <div class="section-title">Impact On Targeted Districts</div>
+          <div class="section-subtitle">Using 2024 Presidential Vote Share</div>
+        </div>
+
+        <div class="demo-grid">
+          <!-- Box 1 -->
+          <div class="demo-card">
+            <div class="demo-label">Mean Partisan Shift</div>
+            <div class="demo-value" id="sb-mean-shift">{mean_shift}</div>
+            <div class="demo-sublabel">Towards intended Party</div>
+          </div>
+
+          <!-- Box 2 -->
+          <div class="demo-card">
+            <div class="demo-label">Median Partisan Lean</div>
+            <div class="demo-value" id="sb-median-lean">{median_lean}</div>
+            <div class="demo-sublabel">Favoring intended Party</div>
+          </div>
+
+          <!-- Box 3 -->
+          <div class="demo-card">
+            <div class="demo-label">Mean Partisan Shift (Net)</div>
+            <div class="demo-value net-shift-val {net_shift_class}" id="sb-net-shift">{net_shift}</div>
+          </div>
+
+          <!-- Box 4 -->
+          <div class="demo-card">
+            <div class="demo-label">Median New District</div>
+            <div class="demo-value median-impacted-val {median_impacted_class}" id="sb-median-impacted">
+              <span class="district-code">{median_impacted_dist}</span>,&nbsp;<span
+                class="lean-value">{median_impacted_lean}</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tipping Point Districts Module -->
+      <div class="data-section">
+        <div class="section-title">Tipping Point District for the 2024 House Elections</div>
+
+        <div class="tipping-row">
+          <div>
+            <div class="tipping-name" id="sb-tipping-new-name">{tipping_new_name}</div>
+            <div class="tipping-sub">Using 2026 Boundaries</div>
+          </div>
+          <div class="tipping-margin {tipping_new_class}" id="sb-tipping-new-margin">{tipping_new_margin}</div>
+        </div>
+
+        <div class="tipping-row">
+          <div>
+            <div class="tipping-name muted" id="sb-tipping-old-name">{tipping_old_name}</div>
+            <div class="tipping-sub">2024 Boundaries</div>
+          </div>
+          <div class="tipping-margin {tipping_old_class} muted" id="sb-tipping-old-margin">{tipping_old_margin}</div>
+        </div>
+
+        <!-- Generic Congressional Ballot Advantage -->
+        <div class="tipping-row generic-ballot-row">
+          <div>
+            <div class="tipping-name">Generic Ballot Advantage</div>
+            <div class="tipping-sub">Seat % Bias vs. Popular Vote</div>
+          </div>
+          <div class="tipping-margin {ballot_adv_class}" id="sb-ballot-adv">{ballot_adv_display}</div>
+        </div>
       </div>
     </div>
 
-    <!-- Tipping Point Districts Module -->
-    <div class="data-section">
-      <div class="section-title">Tipping Point District for the 2024 House Elections</div>
-
-      <div class="tipping-row">
-        <div>
-          <div class="tipping-name" id="sb-tipping-new-name">{tipping_new_name}</div>
-          <div class="tipping-sub">Using 2026 Boundaries</div>
+    <div id="sidebar-detail-view" style="display: none;">
+      <div class="sidebar-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span class="region-title" id="sb-detail-district-title">TX-34</span>
+          <button id="sb-reset-btn" class="sidebar-reset-btn" title="Back to National Overview">✕ Clear / Lock</button>
         </div>
-        <div class="tipping-margin {tipping_new_class}" id="sb-tipping-new-margin">{tipping_new_margin}</div>
+        <div id="sb-lock-status" class="lock-indicator-badge">Hovering (Click to Lock)</div>
+        <div class="region-caption" id="sb-detail-status">2026 Redrawn District</div>
       </div>
 
-      <div class="tipping-row">
-        <div>
-          <div class="tipping-name muted" id="sb-tipping-old-name">{tipping_old_name}</div>
-          <div class="tipping-sub">2024 Boundaries</div>
+      <!-- 1. Partisan Lean & Blended Index -->
+      <div class="data-section">
+        <div class="section-title">Partisan Profile</div>
+        <div class="demo-grid">
+          <div class="demo-card">
+            <div class="demo-label">Blended Lean Index</div>
+            <div class="demo-value" id="sb-detail-blended-lean">R +4.2%</div>
+          </div>
+          <div class="demo-card">
+            <div class="demo-label">2024 Pres. Margin</div>
+            <div class="demo-value" id="sb-detail-pres-margin">Trump +10.1%</div>
+          </div>
         </div>
-        <div class="tipping-margin {tipping_old_class} muted" id="sb-tipping-old-margin">{tipping_old_margin}</div>
       </div>
 
-      <!-- Generic Congressional Ballot Advantage -->
-      <div class="tipping-row generic-ballot-row">
-        <div>
-          <div class="tipping-name">Generic Ballot Advantage</div>
-          <div class="tipping-sub">Seat % Bias vs. Popular Vote</div>
+      <!-- 2. 2024 Representative Result -->
+      <div class="data-section">
+        <div class="section-title">2024 House Election</div>
+        <div class="candidate-row prominent">
+          <div class="candidate-info">
+            <div class="party-indicator" id="sb-house-party-indicator"></div>
+            <div>
+              <div class="candidate-name prominent" id="sb-detail-rep-name">Vicente Gonzalez</div>
+              <div class="demo-sublabel" id="sb-detail-rep-type">Incumbent • General Contest</div>
+            </div>
+          </div>
+          <div class="vote-data">
+            <div class="vote-percentage prominent" id="sb-detail-house-margin">+2.8%</div>
+          </div>
         </div>
-        <div class="tipping-margin {ballot_adv_class}" id="sb-ballot-adv">{ballot_adv_display}</div>
+      </div>
+
+      <!-- 3. District Demographics (VAP Breakdown) -->
+      <div class="data-section">
+        <div class="section-title-group">
+          <div class="section-title">Voting Age Demographics</div>
+          <div class="section-subtitle" id="sb-detail-total-vap">Total VAP: 560,000</div>
+        </div>
+
+        <div class="demographic-stat-bar-container">
+          <!-- Hispanic -->
+          <div class="demo-bar-row">
+            <span>Hispanic / Latino:</span>
+            <strong id="sb-detail-hispanic-pct">0.0%</strong>
+          </div>
+          <!-- White -->
+          <div class="demo-bar-row">
+            <span>White:</span>
+            <strong id="sb-detail-white-pct">0.0%</strong>
+          </div>
+          <!-- Black -->
+          <div class="demo-bar-row">
+            <span>Black / African Am.:</span>
+            <strong id="sb-detail-black-pct">0.0%</strong>
+          </div>
+          <!-- Asian -->
+          <div class="demo-bar-row">
+            <span>Asian American:</span>
+            <strong id="sb-detail-asian-pct">0.0%</strong>
+          </div>
+          <!-- Native -->
+          <div class="demo-bar-row">
+            <span>Native American:</span>
+            <strong id="sb-detail-native-pct">0.0%</strong>
+          </div>
+        </div>
       </div>
     </div>
   </div>

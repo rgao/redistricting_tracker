@@ -309,7 +309,8 @@ body {
   letter-spacing: -0.01em !important;
   color: #ffffff !important;
   margin-top: 0 !important;
-  margin-bottom: 16px !important;       /* Clean, uniform separation above content */
+  margin-bottom: 16px !important;
+  /* Clean, uniform separation above content */
   font-weight: 800 !important;
   display: block;
   line-height: 1.3 !important;
@@ -319,8 +320,10 @@ body {
 .sidebar .section-title-group {
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;                 /* Controlled 4px vertical distance between title & subtitle */
-  margin-bottom: 16px !important;      /* Clean, uniform separation above the cards */
+  gap: 4px !important;
+  /* Controlled 4px vertical distance between title & subtitle */
+  margin-bottom: 16px !important;
+  /* Clean, uniform separation above the cards */
 }
 
 /* Reset individual title margin when wrapped inside the group */
@@ -496,11 +499,13 @@ body {
 
 /* Box 3 Net Shift Dynamic Colors */
 .net-shift-val.dem {
-  color: #60a5fa !important;  /* Democratic Blue */
+  color: #60a5fa !important;
+  /* Democratic Blue */
 }
 
 .net-shift-val.rep {
-  color: #f87171 !important;  /* Republican Red */
+  color: #f87171 !important;
+  /* Republican Red */
 }
 
 /* Box 4: Median Impacted District */
@@ -590,6 +595,58 @@ body {
 .tipping-margin.muted {
   font-size: 1.35rem !important;
   opacity: 0.85 !important;
+}
+
+.sidebar-reset-btn {
+  background: var(--ms-bg-surface);
+  border: 1px solid var(--ms-border-muted);
+  color: var(--ms-text-muted);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-reset-btn:hover {
+  background: var(--ms-rep-red);
+  color: #ffffff;
+  border-color: var(--ms-rep-red);
+}
+
+.lock-indicator-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--ms-border-muted);
+  color: var(--ms-text-muted);
+  margin-bottom: 6px;
+}
+
+.lock-indicator-badge.locked {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.demographic-stat-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.demo-bar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.92rem;
+  color: var(--ms-text-main);
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
 /* ==========================================================================

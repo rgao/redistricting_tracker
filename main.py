@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[11]:
 
 
 import os
@@ -20,7 +20,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[2]:
+# In[12]:
 
 
 # Create new columns that shows partisan lean (e.g. D+7.89) for visualization tooltips
@@ -41,7 +41,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[3]:
+# In[13]:
 
 
 # Color scheme
@@ -74,7 +74,7 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[4]:
+# In[14]:
 
 
 # --- Filter Targeted / Impacted Districts ---
@@ -139,7 +139,7 @@ sidebar_context = {
 }
 
 
-# In[5]:
+# In[15]:
 
 
 # ==============================================================================
@@ -224,7 +224,7 @@ sidebar_context.update({
 })
 
 
-# In[6]:
+# In[16]:
 
 
 # Define static assets and variable
@@ -269,7 +269,7 @@ MAP_OPTIONS = {
 }
 
 
-# In[7]:
+# In[17]:
 
 
 # Main function for map initialization and compilation
@@ -360,26 +360,26 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[8]:
+# In[18]:
 
 
 # Tooltips on hover
 tooltip_lean = folium.GeoJsonTooltip(
-    fields=['District No.', 'Margin New Partisan', 'Margin Partisan'], 
-    aliases=['2026 District No.:', 'Pres. Margin (Post-Redistricting):', "Pres. Margin (2024 Boundaries):"],
+    fields=['District', 'Margin New Partisan', 'Margin Partisan'], 
+    aliases=['District:', 'Pres. Margin (Post-Redistricting):', "Pres. Margin (2024 Boundaries):"],
     style="background-color:rgba(255,255,255,0.95); color:#1a1a1a; font-size:12px; font-weight:bold; border:2px solid #222;",
     localize=True
 )
 
 tooltip_shift = folium.GeoJsonTooltip(
-    fields=['District No.', 'Margin Shift Partisan', 'Margin Partisan'], 
-    aliases=['2026 District No.:', "Shift from 2024 District's Pres. Margin:", "Pres. Margin (2024 Boundaries):"],
+    fields=['District', 'Margin Shift Partisan', 'Margin Partisan'], 
+    aliases=['District:', "Shift from 2024 District's Pres. Margin:", "Pres. Margin (2024 Boundaries):"],
     style="background-color:rgba(255,255,255,0.95); color:#1a1a1a; font-size:12px; font-weight:bold; border:2px solid #222; border-radius:4px;",
     localize=True
 )
 
 
-# In[9]:
+# In[19]:
 
 
 # Compile margin lean map
@@ -391,7 +391,7 @@ compile_map(
 )
 
 
-# In[10]:
+# In[20]:
 
 
 # Compile margin shift map
