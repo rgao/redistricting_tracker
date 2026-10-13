@@ -7,6 +7,8 @@
   </button>
 
   <div class="sidebar-content" id="sidebar-content" tabindex="0">
+
+    <!-- ================= DEFAULT NATIONAL OVERVIEW ================= -->
     <div id="sidebar-default-view">
       <!-- Header Module: National Overview -->
       <div class="sidebar-header">
@@ -29,7 +31,6 @@
       <div class="data-section">
         <div class="section-title">Mean Presidential Vote Share of Targeted Districts</div>
 
-        <!-- New Boundaries (Primary emphasis) -->
         <div class="candidate-row prominent">
           <div class="candidate-info">
             <div class="party-indicator dem prominent"></div>
@@ -55,7 +56,6 @@
           <div class="bar-fill rep" id="sb-bar-rep-new" data-width="{trump_new_pct}"></div>
         </div>
 
-        <!-- Prior Lines (Subordinate comparison) -->
         <div class="candidate-row prior-cycle">
           <div class="candidate-info">
             <div class="party-indicator dem muted"></div>
@@ -85,27 +85,23 @@
         </div>
 
         <div class="demo-grid">
-          <!-- Box 1 -->
           <div class="demo-card">
             <div class="demo-label">Mean Partisan Shift</div>
             <div class="demo-value" id="sb-mean-shift">{mean_shift}</div>
             <div class="demo-sublabel">Towards intended Party</div>
           </div>
 
-          <!-- Box 2 -->
           <div class="demo-card">
             <div class="demo-label">Median Partisan Lean</div>
             <div class="demo-value" id="sb-median-lean">{median_lean}</div>
             <div class="demo-sublabel">Favoring intended Party</div>
           </div>
 
-          <!-- Box 3 -->
           <div class="demo-card">
             <div class="demo-label">Mean Partisan Shift (Net)</div>
             <div class="demo-value net-shift-val {net_shift_class}" id="sb-net-shift">{net_shift}</div>
           </div>
 
-          <!-- Box 4 -->
           <div class="demo-card">
             <div class="demo-label">Median New District</div>
             <div class="demo-value median-impacted-val {median_impacted_class}" id="sb-median-impacted">
@@ -113,7 +109,6 @@
                 class="lean-value">{median_impacted_lean}</span>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -134,10 +129,9 @@
             <div class="tipping-name muted" id="sb-tipping-old-name">{tipping_old_name}</div>
             <div class="tipping-sub">2024 Boundaries</div>
           </div>
-          <div class="tipping-margin {tipping_old_class} muted" id="sb-tipping-old-margin">{tipping_old_margin}</div>
+          <div class="tipping-margin muted {tipping_old_class}" id="sb-tipping-old-margin">{tipping_old_margin}</div>
         </div>
 
-        <!-- Generic Congressional Ballot Advantage -->
         <div class="tipping-row generic-ballot-row">
           <div>
             <div class="tipping-name">Generic Ballot Advantage</div>
@@ -148,83 +142,77 @@
       </div>
     </div>
 
+    <!-- ================= DYNAMIC DISTRICT DETAIL VIEW ================= -->
     <div id="sidebar-detail-view" style="display: none;">
+      <!-- District Header -->
       <div class="sidebar-header">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span class="region-title" id="sb-detail-district-title">TX-34</span>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div class="region-title" id="sb-detail-district-title">District Title</div>
           <button id="sb-reset-btn" class="sidebar-reset-btn" title="Back to National Overview">✕ Clear / Lock</button>
         </div>
         <div id="sb-lock-status" class="lock-indicator-badge">Hovering (Click to Lock)</div>
-        <div class="region-caption" id="sb-detail-status">2026 Redrawn District</div>
+        <div class="region-caption" id="sb-detail-status" style="display: none;"></div>
       </div>
 
-      <!-- 1. Partisan Lean & Blended Index -->
+      <!-- 1. Partisan Profile -->
       <div class="data-section">
         <div class="section-title">Partisan Profile</div>
         <div class="demo-grid">
           <div class="demo-card">
-            <div class="demo-label">Blended Lean Index</div>
-            <div class="demo-value" id="sb-detail-blended-lean">R +4.2%</div>
+            <div class="demo-label">Partisan Lean Index</div>
+            <div class="demo-value" id="sb-detail-blended-lean">EVEN</div>
           </div>
           <div class="demo-card">
             <div class="demo-label">2024 Pres. Margin</div>
-            <div class="demo-value" id="sb-detail-pres-margin">Trump +10.1%</div>
+            <div class="demo-value" id="sb-detail-pres-margin">EVEN</div>
           </div>
         </div>
       </div>
 
-      <!-- 2. 2024 Representative Result -->
+      <!-- 2. 2024 House Election -->
       <div class="data-section">
         <div class="section-title">2024 House Election</div>
         <div class="candidate-row prominent">
           <div class="candidate-info">
-            <div class="party-indicator" id="sb-house-party-indicator"></div>
-            <div>
-              <div class="candidate-name prominent" id="sb-detail-rep-name">Vicente Gonzalez</div>
-              <div class="demo-sublabel" id="sb-detail-rep-type">Incumbent • General Contest</div>
-            </div>
+            <div class="party-indicator prominent" id="sb-house-party-indicator"></div>
+            <div class="candidate-name prominent" id="sb-detail-rep-name">Candidate Name</div>
           </div>
           <div class="vote-data">
-            <div class="vote-percentage prominent" id="sb-detail-house-margin">+2.8%</div>
+            <div class="vote-percentage prominent" id="sb-detail-house-margin">N/A</div>
           </div>
         </div>
+        <!-- Only visible when non-standard edge cases occur -->
+        <div id="sb-detail-rep-type" style="display: none;"></div>
       </div>
 
-      <!-- 3. District Demographics (VAP Breakdown) -->
+      <!-- 3. Demographics (VAP) -->
       <div class="data-section">
-        <div class="section-title-group">
-          <div class="section-title">Voting Age Demographics</div>
-          <div class="section-subtitle" id="sb-detail-total-vap">Total VAP: 560,000</div>
-        </div>
-
+        <div class="section-title">Demographics (VAP)</div>
         <div class="demographic-stat-bar-container">
-          <!-- Hispanic -->
-          <div class="demo-bar-row">
-            <span>Hispanic / Latino:</span>
-            <strong id="sb-detail-hispanic-pct">0.0%</strong>
-          </div>
-          <!-- White -->
           <div class="demo-bar-row">
             <span>White:</span>
             <strong id="sb-detail-white-pct">0.0%</strong>
           </div>
-          <!-- Black -->
+          <div class="demo-bar-row">
+            <span>Hispanic / Latino:</span>
+            <strong id="sb-detail-hispanic-pct">0.0%</strong>
+          </div>
           <div class="demo-bar-row">
             <span>Black / African Am.:</span>
             <strong id="sb-detail-black-pct">0.0%</strong>
           </div>
-          <!-- Asian -->
           <div class="demo-bar-row">
             <span>Asian American:</span>
             <strong id="sb-detail-asian-pct">0.0%</strong>
           </div>
-          <!-- Native -->
-          <div class="demo-bar-row">
-            <span>Native American:</span>
-            <strong id="sb-detail-native-pct">0.0%</strong>
+          <!-- Total Minority at the bottom -->
+          <div class="demo-bar-row highlight-minority">
+            <span>Total Minority:</span>
+            <strong id="sb-detail-minority-pct">0.0%</strong>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 </div>

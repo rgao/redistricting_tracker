@@ -29,13 +29,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }, 100);
 
-    // 3. Populate Vote Margin Fill Bars from data-width
+    // 3. Populate Vote Margin Fill Bars
     document.querySelectorAll('.bar-fill[data-width]').forEach((el) => {
         const w = el.getAttribute('data-width');
         if (w) el.style.width = w;
     });
 
-    // 4. Sidebar Toggle Listener (Delegated to handle all screen sizes)
+    // 4. Sidebar Toggle Listener
     document.addEventListener('click', function (e) {
         const toggleBtn = e.target.closest('#sidebar-toggle');
         if (toggleBtn) {
@@ -55,26 +55,19 @@ document.addEventListener("DOMContentLoaded", function () {
         const cells = tooltipElement.querySelectorAll("td");
         cells.forEach((td) => {
             const text = td.textContent.trim();
-
-            // Democratic / Harris advantage
             if (text.startsWith("Harris+") || text.startsWith("D +") || text.startsWith("D+")) {
-                td.style.color = "#2563eb"; // Blue
+                td.style.color = "#2563eb";
                 td.style.fontWeight = "bold";
-            }
-            // Republican / Trump advantage
-            else if (text.startsWith("Trump+") || text.startsWith("R +") || text.startsWith("R+")) {
-                td.style.color = "#dc2626"; // Red
+            } else if (text.startsWith("Trump+") || text.startsWith("R +") || text.startsWith("R+")) {
+                td.style.color = "#dc2626";
                 td.style.fontWeight = "bold";
-            }
-            // Neutral / Even
-            else if (text === "EVEN") {
-                td.style.color = "#64748b"; // Slate Grey
+            } else if (text === "EVEN") {
+                td.style.color = "#64748b";
                 td.style.fontWeight = "bold";
             }
         });
     }
 
-    // Observe Leaflet map container for inserted and re-rendered tooltip contents
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
@@ -88,7 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
 
-            // Handle in-place text updates when dragging cursor over adjacent boundaries
             if (mutation.type === "characterData" || mutation.type === "childList") {
                 const targetTooltip = mutation.target.nodeType === 1
                     ? mutation.target.closest(".leaflet-tooltip")
@@ -100,6 +92,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    // =========================================================================
+    // 6. DISTRICT INTERACTIVE HIGHLIGHTING & LOCKING
+    // =========================================================================
     let lockedLayer = null;
     let currentHoverLayer = null;
 
@@ -108,17 +103,39 @@ document.addEventListener("DOMContentLoaded", function () {
     const resetBtn = document.getElementById("sb-reset-btn");
     const lockStatusBadge = document.getElementById("sb-lock-status");
 
-    // Styling constants for district highlighting
-    const HIGHLIGHT_STYLE = {
-        weight: 3.5,
-        color: "#ffffff",
+    // Hover: Vivid Amber Gold
+    const HOVER_STYLE = {
+        weight: 2.2,
+        color: "#f59e0b",
         dashArray: "",
-        fillOpacity: 0.95
+        fillOpacity: 0.88
     };
 
-    function formatPct(val) {
+    // Locked: Mint Green
+    const LOCKED_STYLE = {
+        weight: 3.2,
+        color: "#10b981",
+        dashArray: "",
+        fillOpacity: 0.94
+    };
+
+    function formatPct2(val) {
         if (val === undefined || val === null || isNaN(val)) return "N/A";
-        return (parseFloat(val) * 100).toFixed(1) + "%";
+        return (parseFloat(val) * 100).toFixed(2) + "%";
+    }
+
+    function applyPartyColor(element, party) {
+        element.classList.remove("dem", "rep");
+        if (!party) return;
+        const p = party.toUpperCase();
+        if (p.startsWith("D")) element.classList.add("dem");
+        else if (p.startsWith("R")) element.classList.add("rep");
+    }
+
+    function isNonStandardRace(raceType) {
+        if (!raceType) return false;
+        const rt = raceType.toLowerCase();
+        return !(rt.includes("standard") && !rt.includes("non-standard"));
     }
 
     function populateSidebar(props) {
@@ -127,58 +144,81 @@ document.addEventListener("DOMContentLoaded", function () {
         defaultView.style.display = "none";
         detailView.style.display = "block";
 
-        // District Title & Codes
-        document.getElementById("sb-detail-district-title").textContent = props.District || "District";
-        document.getElementById("sb-detail-status").textContent = props.Targeted
-            ? "Targeted / Redrawn Boundary"
-            : "Existing Congressional District";
-
-        // Lean Metrics
-        const bln = document.getElementById("sb-detail-blended-lean");
-        bln.textContent = props["Partisan Index"] !== undefined
-            ? (props["Partisan Index"] > 0 ? `D +${(props["Partisan Index"] * 100).toFixed(1)}%` : `R +${(Math.abs(props["Partisan Index"]) * 100).toFixed(1)}%`)
-            : (props["Margin Partisan"] || "EVEN");
-
-        document.getElementById("sb-detail-pres-margin").textContent = props["Margin New Partisan"] || props["Margin Partisan"] || "EVEN";
-
-        // 2024 Representative Info & Race Edge Cases
-        const repName = props.House_Winner || "Contested / Open Seat";
-        const repParty = (props.House_Party || "IND").toUpperCase();
         const raceType = props.House_Race_Type || "Standard Contest";
-        const incText = props.House_Incumbent ? "Incumbent" : "Challenger / Open";
+        const hasEdgeCase = isNonStandardRace(raceType);
 
-        document.getElementById("sb-detail-rep-name").textContent = repName;
-        document.getElementById("sb-detail-rep-type").textContent = `${incText} • ${raceType}`;
-
-        const houseMarginEl = document.getElementById("sb-detail-house-margin");
-        if (raceType.includes("Unopposed") || raceType.includes("Uncontested")) {
-            houseMarginEl.textContent = "Unopposed";
-        } else if (raceType.includes("D_vs_D") || raceType.includes("R_vs_R")) {
-            houseMarginEl.textContent = `${props.House_Margin ? Math.abs(props.House_Margin * 100).toFixed(1) + '%' : 'Same-Party'}`;
+        // 1. Sidebar District Header
+        document.getElementById("sb-detail-district-title").textContent = props.District_Name || props.District;
+        // District Header & Status Caption
+        const statusEl = document.getElementById("sb-detail-status");
+        if (props.Targeted) {
+            statusEl.textContent = "Redrawn District";
+            statusEl.style.display = "block";
         } else {
-            houseMarginEl.textContent = props.House_Margin
-                ? (props.House_Margin > 0 ? `D +${(props.House_Margin * 100).toFixed(1)}%` : `R +${Math.abs(props.House_Margin * 100).toFixed(1)}%`)
-                : "N/A";
+            statusEl.textContent = "";
+            statusEl.style.display = "none";
         }
 
-        const indicator = document.getElementById("sb-house-party-indicator");
-        indicator.className = "party-indicator " + (repParty.startsWith("D") ? "dem" : repParty.startsWith("R") ? "rep" : "");
+        // 2. Partisan Profile
+        const blnEl = document.getElementById("sb-detail-blended-lean");
+        const presEl = document.getElementById("sb-detail-pres-margin");
 
-        // Racial Demographics
-        document.getElementById("sb-detail-total-vap").textContent = `Total VAP: ${(props.TotalVAP || 0).toLocaleString()}`;
-        document.getElementById("sb-detail-hispanic-pct").textContent = formatPct(props.HispanicPct);
-        document.getElementById("sb-detail-white-pct").textContent = formatPct(props.WhitePct);
-        document.getElementById("sb-detail-black-pct").textContent = formatPct(props.BlackPct);
-        document.getElementById("sb-detail-asian-pct").textContent = formatPct(props.AsianPct);
-        document.getElementById("sb-detail-native-pct").textContent = formatPct(props.NativePct);
+        // Partisan Lean Index as signed number (e.g. D +8.57, R +55.89)
+        const partisanLeanText = props.Partisan_Lean_Index || "EVEN";
+        blnEl.textContent = partisanLeanText;
+        applyPartyColor(blnEl, partisanLeanText.startsWith("D") ? "DEM" : partisanLeanText.startsWith("R") ? "REP" : null);
+
+        // Presidential Margin to 2 decimal places
+        const presMargin = props["Margin 24"];
+        if (presMargin !== undefined && presMargin !== null && !isNaN(presMargin)) {
+            const presPct = Math.abs(parseFloat(presMargin) * 100).toFixed(2);
+            presEl.textContent = presMargin > 0 ? `Harris +${presPct}%` : `Trump +${presPct}%`;
+            applyPartyColor(presEl, presMargin > 0 ? "DEM" : "REP");
+        } else {
+            presEl.textContent = props["Margin 24 Partisan"] || "EVEN";
+        }
+
+        // 3. 2024 House Election Results
+        const repName = props.House_Winner || "Uncontested / No Data";
+        const repParty = (props.House_Party || "OTHER").toUpperCase();
+
+        document.getElementById("sb-detail-rep-name").textContent = repName;
+
+        const raceTypeEl = document.getElementById("sb-detail-rep-type");
+        if (hasEdgeCase) {
+            raceTypeEl.textContent = `* ${raceType}`;
+            raceTypeEl.style.display = "block";
+        } else {
+            raceTypeEl.textContent = "";
+            raceTypeEl.style.display = "none";
+        }
+
+        const houseMarginEl = document.getElementById("sb-detail-house-margin");
+        if (props.House_MOV_Raw !== undefined && props.House_MOV_Raw !== null && !isNaN(props.House_MOV_Raw)) {
+            houseMarginEl.textContent = `+${(parseFloat(props.House_MOV_Raw) * 100).toFixed(2)}%`;
+        } else {
+            houseMarginEl.textContent = "N/A";
+        }
+        applyPartyColor(houseMarginEl, repParty);
+
+        const indicator = document.getElementById("sb-house-party-indicator");
+        indicator.className = "party-indicator prominent";
+        applyPartyColor(indicator, repParty);
+
+        // 4. Demographics (VAP) formatted to 2 decimal places
+        document.getElementById("sb-detail-white-pct").textContent = formatPct2(props.WhitePct);
+        document.getElementById("sb-detail-hispanic-pct").textContent = formatPct2(props.HispanicPct);
+        document.getElementById("sb-detail-black-pct").textContent = formatPct2(props.BlackPct);
+        document.getElementById("sb-detail-asian-pct").textContent = formatPct2(props.AsianPct);
+        document.getElementById("sb-detail-minority-pct").textContent = formatPct2(props.MinorityPct);
     }
 
     function resetSidebar() {
-        if (lockedLayer && window._choroplethLayer) {
-            window._choroplethLayer.resetStyle(lockedLayer);
+        if (lockedLayer && window._mainGeoJsonLayer) {
+            window._mainGeoJsonLayer.resetStyle(lockedLayer);
         }
-        if (currentHoverLayer && window._choroplethLayer) {
-            window._choroplethLayer.resetStyle(currentHoverLayer);
+        if (currentHoverLayer && window._mainGeoJsonLayer) {
+            window._mainGeoJsonLayer.resetStyle(currentHoverLayer);
         }
         lockedLayer = null;
         currentHoverLayer = null;
@@ -186,11 +226,8 @@ document.addEventListener("DOMContentLoaded", function () {
         defaultView.style.display = "block";
     }
 
-    if (resetBtn) {
-        resetBtn.addEventListener("click", resetSidebar);
-    }
+    if (resetBtn) resetBtn.addEventListener("click", resetSidebar);
 
-    // Attach to Leaflet instances once ready
     function setupLayerEvents() {
         const mapEl = document.querySelector(".folium-map");
         if (!mapEl) return;
@@ -198,16 +235,15 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!map) return setTimeout(setupLayerEvents, 150);
 
         map.eachLayer(function (layer) {
-            // Find the active GeoJson vector choropleth layer
-            if (layer.eachLayer && layer.feature || (layer instanceof L.GeoJSON)) {
-                window._choroplethLayer = layer;
+            if (layer instanceof L.GeoJSON) {
+                window._mainGeoJsonLayer = layer;
 
                 layer.eachLayer(function (featureLayer) {
                     featureLayer.on({
                         mouseover: function (e) {
-                            if (lockedLayer) return; // Ignore hover events while locked
+                            if (lockedLayer) return;
                             currentHoverLayer = e.target;
-                            currentHoverLayer.setStyle(HIGHLIGHT_STYLE);
+                            currentHoverLayer.setStyle(HOVER_STYLE);
                             if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
                                 currentHoverLayer.bringToFront();
                             }
@@ -224,21 +260,18 @@ document.addEventListener("DOMContentLoaded", function () {
                             resetSidebar();
                         },
                         click: function (e) {
-                            // Toggle lock state
                             if (lockedLayer === e.target) {
-                                // Unlock if clicked a second time
                                 layer.resetStyle(lockedLayer);
                                 lockedLayer = null;
                                 lockStatusBadge.textContent = "Hovering (Click to Lock)";
                                 lockStatusBadge.classList.remove("locked");
                                 resetSidebar();
                             } else {
-                                // Lock onto new district
                                 if (lockedLayer) layer.resetStyle(lockedLayer);
                                 lockedLayer = e.target;
-                                lockedLayer.setStyle(HIGHLIGHT_STYLE);
+                                lockedLayer.setStyle(LOCKED_STYLE);
                                 lockedLayer.bringToFront();
-                                lockStatusBadge.textContent = "Locked District Selection";
+                                lockStatusBadge.textContent = "Locked Selection";
                                 lockStatusBadge.classList.add("locked");
                                 populateSidebar(e.target.feature.properties);
                             }
@@ -251,7 +284,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setupLayerEvents();
 
-    // Directly attach to body (nested DOMContentLoaded listener removed)
     observer.observe(document.body, {
         childList: true,
         subtree: true,
