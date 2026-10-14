@@ -122,9 +122,18 @@ document.addEventListener("DOMContentLoaded", function () {
         fillOpacity: 0.94
     };
 
-    function formatPct2(val) {
-        if (val === undefined || val === null || isNaN(val)) return "N/A";
-        return (parseFloat(val) * 100).toFixed(2) + "%";
+    function formatSignedMargin(val) {
+        if (val === null || val === undefined || isNaN(val)) return 'EVEN';
+        const pct = Math.abs(val) * 100;
+        if (pct < 0.005) return 'EVEN';
+        return (val > 0 ? 'Harris +' : 'Trump +') + pct.toFixed(2) + '%';
+    }
+
+    function formatShiftMargin(val) {
+        if (val === null || val === undefined || isNaN(val)) return 'EVEN';
+        const pct = Math.abs(val) * 100;
+        if (pct < 0.005) return 'EVEN';
+        return (val > 0 ? 'Harris +' : 'Trump +') + pct.toFixed(2) + '%';
     }
 
     function applyPartyColor(element, party) {
@@ -161,24 +170,28 @@ document.addEventListener("DOMContentLoaded", function () {
             statusEl.style.display = "none";
         }
 
-        // 2. Partisan Profile
+        // Partisan Lean Index
         const blnEl = document.getElementById("sb-detail-blended-lean");
-        const presEl = document.getElementById("sb-detail-pres-margin");
-
-        // Partisan Lean Index as signed number (e.g. D +8.57, R +55.89)
         const partisanLeanText = props.Partisan_Lean_Index || "EVEN";
         blnEl.textContent = partisanLeanText;
         applyPartyColor(blnEl, partisanLeanText.startsWith("D") ? "DEM" : partisanLeanText.startsWith("R") ? "REP" : null);
 
-        // Presidential Margin to 2 decimal places
-        const presMargin = props["Margin 24"];
-        if (presMargin !== undefined && presMargin !== null && !isNaN(presMargin)) {
-            const presPct = Math.abs(parseFloat(presMargin) * 100).toFixed(2);
-            presEl.textContent = presMargin > 0 ? `Harris +${presPct}%` : `Trump +${presPct}%`;
-            applyPartyColor(presEl, presMargin > 0 ? "DEM" : "REP");
-        } else {
-            presEl.textContent = props["Margin 24 Partisan"] || "EVEN";
-        }
+        // Presidential Vote Share Rows (2024 Boundaries, 2026 Boundaries, Shift)
+        const m24 = parseFloat(props["Margin 24"]);
+        const mNew = parseFloat(props["Margin New"]);
+        const mShift = parseFloat(props["Margin Shift"]);
+
+        const p24Elem = document.getElementById("sb-detail-pres-24");
+        p24Elem.textContent = formatSignedMargin(m24);
+        p24Elem.className = "pres-row-val " + (m24 > 0.00005 ? "dem" : (m24 < -0.00005 ? "rep" : ""));
+
+        const pNewElem = document.getElementById("sb-detail-pres-new");
+        pNewElem.textContent = formatSignedMargin(mNew);
+        pNewElem.className = "pres-row-val " + (mNew > 0.00005 ? "dem" : (mNew < -0.00005 ? "rep" : ""));
+
+        const pShiftElem = document.getElementById("sb-detail-pres-shift");
+        pShiftElem.textContent = formatShiftMargin(mShift);
+        pShiftElem.className = "pres-row-val " + (mShift > 0.00005 ? "dem" : (mShift < -0.00005 ? "rep" : ""));
 
         // 3. 2024 House Election Results
         const repName = props.House_Winner || "Uncontested / No Data";
@@ -207,12 +220,12 @@ document.addEventListener("DOMContentLoaded", function () {
         indicator.className = "party-indicator prominent";
         applyPartyColor(indicator, repParty);
 
-        // 4. Demographics (VAP) formatted to 2 decimal places
-        document.getElementById("sb-detail-white-pct").textContent = formatPct2(props.WhitePct);
-        document.getElementById("sb-detail-hispanic-pct").textContent = formatPct2(props.HispanicPct);
-        document.getElementById("sb-detail-black-pct").textContent = formatPct2(props.BlackPct);
-        document.getElementById("sb-detail-asian-pct").textContent = formatPct2(props.AsianPct);
-        document.getElementById("sb-detail-minority-pct").textContent = formatPct2(props.MinorityPct);
+        // 4. Demographics (VAP) formatted to 1 decimal place
+        document.getElementById("sb-detail-white-pct").textContent = ((props.WhitePct || 0) * 100).toFixed(1) + "%";
+        document.getElementById("sb-detail-hispanic-pct").textContent = ((props.HispanicPct || 0) * 100).toFixed(1) + "%";
+        document.getElementById("sb-detail-black-pct").textContent = ((props.BlackPct || 0) * 100).toFixed(1) + "%";
+        document.getElementById("sb-detail-asian-pct").textContent = ((props.AsianPct || 0) * 100).toFixed(1) + "%";
+        document.getElementById("sb-detail-minority-pct").textContent = ((props.MinorityPct || 0) * 100).toFixed(1) + "%";
     }
 
     function resetSidebar() {
@@ -224,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         lockedLayer = null;
         currentHoverLayer = null;
-        
+
         const statusEl = document.getElementById("sb-detail-status");
         if (statusEl) {
             statusEl.textContent = "";
@@ -298,4 +311,48 @@ document.addEventListener("DOMContentLoaded", function () {
         subtree: true,
         characterData: true
     });
+});
+
+// Interactive Click-to-Open Info Tooltips
+document.addEventListener('click', function (e) {
+    const infoBtn = e.target.closest('.info-tooltip-icon');
+    const closeBtn = e.target.closest('.popover-close');
+    const existingPopover = document.querySelector('.metric-info-popover');
+
+    // 1. Close button clicked
+    if (closeBtn && existingPopover) {
+        e.preventDefault();
+        e.stopPropagation();
+        existingPopover.remove();
+        return;
+    }
+
+    // 2. Info icon clicked
+    if (infoBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (existingPopover) {
+            existingPopover.remove();
+        }
+
+        const infoText = infoBtn.getAttribute('data-info');
+        if (!infoText) return;
+
+        const popover = document.createElement('div');
+        popover.className = 'metric-info-popover';
+        popover.innerHTML = `<button type="button" class="popover-close" aria-label="Close">✕</button>${infoText}`;
+
+        document.body.appendChild(popover);
+
+        const rect = infoBtn.getBoundingClientRect();
+        popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+        popover.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 280) + 'px';
+        return;
+    }
+
+    // 3. Click outside popover closes it
+    if (existingPopover && !e.target.closest('.metric-info-popover')) {
+        existingPopover.remove();
+    }
 });

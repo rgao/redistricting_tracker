@@ -2,6 +2,7 @@ todo.txt
 data/
 data/**
 2024_rep.csv
+notebooks/test.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
