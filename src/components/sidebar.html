@@ -86,24 +86,36 @@
 
         <div class="demo-grid">
           <div class="demo-card">
-            <div class="demo-label">Mean Partisan Shift</div>
+            <div class="demo-label">
+              <span>Mean Partisan Shift</span>
+              <button type="button" class="info-tooltip-icon" data-info="Absolute average shift (|Margin Shift|) across all targeted boundaries, measuring the raw magnitude of cartographic changes.">i</button>
+            </div>
             <div class="demo-value" id="sb-mean-shift">{mean_shift}</div>
             <div class="demo-sublabel">Towards intended Party</div>
           </div>
 
           <div class="demo-card">
-            <div class="demo-label">Median Partisan Lean</div>
+            <div class="demo-label">
+              <span>Median Partisan Lean</span>
+              <button type="button" class="info-tooltip-icon" data-info="The median partisan lean rating of all targeted seats, indicating the center of gravity of the redrawn maps.">i</button>
+            </div>
             <div class="demo-value" id="sb-median-lean">{median_lean}</div>
             <div class="demo-sublabel">Favoring intended Party</div>
           </div>
 
           <div class="demo-card">
-            <div class="demo-label">Mean Partisan Shift (Net)</div>
+            <div class="demo-label">
+              <span>Mean Partisan Shift (Net)</span>
+              <button type="button" class="info-tooltip-icon" data-info="Directional signed mean (Σ Margin Shift / N), revealing which party captured net territory overall.">i</button>
+            </div>
             <div class="demo-value net-shift-val {net_shift_class}" id="sb-net-shift">{net_shift}</div>
           </div>
 
           <div class="demo-card">
-            <div class="demo-label">Median New District</div>
+            <div class="demo-label">
+              <span>Median New District</span>
+              <button type="button" class="info-tooltip-icon" data-info="The exact median seat when sorting all altered districts by post-redistricting presidential margin.">i</button>
+            </div>
             <div class="demo-value median-impacted-val {median_impacted_class}" id="sb-median-impacted">
               <span class="district-code">{median_impacted_dist}</span>,&nbsp;<span
                 class="lean-value">{median_impacted_lean}</span>
@@ -114,7 +126,10 @@
 
       <!-- Tipping Point Districts Module -->
       <div class="data-section">
-        <div class="section-title">Tipping Point District for the 2024 House Elections</div>
+        <div class="section-title">
+          <span>Tipping Point District for the 2024 House Elections</span>
+          <button type="button" class="info-tooltip-icon" data-info="The 218th seat when ranking all 435 House districts from most Democratic to most Republican. Winning this seat secures a chamber majority.">i</button>
+        </div>
 
         <div class="tipping-row">
           <div>
@@ -134,13 +149,16 @@
 
         <div class="tipping-row generic-ballot-row">
           <div>
-            <div class="tipping-name">Generic Ballot Advantage</div>
+            <div class="tipping-name">
+              <span>Generic Ballot Advantage</span>
+              <button type="button" class="info-tooltip-icon" data-info="Measures systemic cartographic tilt by subtracting national popular vote share from the majority party's projected seat share.">i</button>
+            </div>
             <div class="tipping-sub">Seat % Bias vs. Popular Vote</div>
           </div>
           <div class="tipping-margin {ballot_adv_class}" id="sb-ballot-adv">{ballot_adv_display}</div>
         </div>
       </div>
-    </div>
+    </div> <!-- Added missing closing div for #sidebar-default-view here -->
 
     <!-- ================= DYNAMIC DISTRICT DETAIL VIEW ================= -->
     <div id="sidebar-detail-view" style="display: none;">
@@ -154,17 +172,34 @@
         <div class="region-caption" id="sb-detail-status" style="display: none;"></div>
       </div>
 
-      <!-- 1. Partisan Profile -->
+      <!-- 1. Partisan Profile & Presidential Comparison -->
       <div class="data-section">
-        <div class="section-title">Partisan Profile</div>
-        <div class="demo-grid">
-          <div class="demo-card">
-            <div class="demo-label">Partisan Lean Index</div>
-            <div class="demo-value" id="sb-detail-blended-lean">EVEN</div>
+        <!-- Unboxed Partisan Lean Index -->
+        <div class="unboxed-stat-row">
+          <div class="unboxed-label-group">
+            <span class="unboxed-title">Partisan Lean Index</span>
+            <button type="button" class="info-tooltip-icon" data-info="Blended index combining 70% of the 2024 presidential margin and 30% of the 2020 re-tabulated margin, normalized against national popular vote baselines.">i</button>
           </div>
-          <div class="demo-card">
-            <div class="demo-label">2024 Pres. Margin</div>
-            <div class="demo-value" id="sb-detail-pres-margin">EVEN</div>
+          <div class="unboxed-value" id="sb-detail-blended-lean">EVEN</div>
+        </div>
+
+        <!-- Single Box for Presidential Vote Share Rows -->
+        <div class="pres-single-box">
+          <div class="pres-box-header">
+            <span class="pres-box-title">2024 Presidential Vote Share</span>
+          </div>
+
+          <div class="pres-row-item">
+            <span class="pres-row-label">2024 Boundary</span>
+            <span class="pres-row-val" id="sb-detail-pres-24">EVEN</span>
+          </div>
+          <div class="pres-row-item">
+            <span class="pres-row-label">2026 Boundary</span>
+            <span class="pres-row-val" id="sb-detail-pres-new">EVEN</span>
+          </div>
+          <div class="pres-row-item last-row">
+            <span class="pres-row-label">2024 -> 2026 Shift</span>
+            <span class="pres-row-val" id="sb-detail-pres-shift">EVEN</span>
           </div>
         </div>
       </div>
