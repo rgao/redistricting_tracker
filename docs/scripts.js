@@ -6,11 +6,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!navContainer) return;
 
         const currentPath = window.location.pathname.split("/").pop();
-        const activePage = (currentPath === "" || currentPath === "index.html") ? "index.html" : currentPath;
+        let activePage = "index.html";
+        if (currentPath === "shift.html") activePage = "shift.html";
+        else if (currentPath === "analysis.html") activePage = "analysis.html";
 
         navContainer.setAttribute("data-current-page", activePage);
         const targetLink = navContainer.querySelector(`a[href="${activePage}"]`);
         if (targetLink) {
+            navContainer.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
             targetLink.classList.add("active");
         }
     })();
@@ -103,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const resetBtn = document.getElementById("sb-reset-btn");
     const lockStatusBadge = document.getElementById("sb-lock-status");
 
-    // Hover: Vivid Amber Gold
+    // Hover: Gold
     const HOVER_STYLE = {
         weight: 2.2,
         color: "#f59e0b",
@@ -147,9 +150,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const raceType = props.House_Race_Type || "Standard Contest";
         const hasEdgeCase = isNonStandardRace(raceType);
 
-        // 1. Sidebar District Header
+        // 1. Sidebar District Header & Status Caption
         document.getElementById("sb-detail-district-title").textContent = props.District_Name || props.District;
-        // District Header & Status Caption
         const statusEl = document.getElementById("sb-detail-status");
         if (props.Targeted) {
             statusEl.textContent = "Redrawn District";
@@ -222,6 +224,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         lockedLayer = null;
         currentHoverLayer = null;
+        
+        const statusEl = document.getElementById("sb-detail-status");
+        if (statusEl) {
+            statusEl.textContent = "";
+            statusEl.style.display = "none";
+        }
+
         detailView.style.display = "none";
         defaultView.style.display = "block";
     }
