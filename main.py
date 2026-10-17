@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[82]:
+# In[ ]:
 
 
 import os
@@ -14,12 +14,12 @@ import pandas as pd
 
 load_dotenv()
 
-gdf = gpd.read_file("data/map2026.geojson")
+gdf = gpd.read_file("docs/map2026.geojson")
 print(gdf.crs)
 gdf.head()
 
 
-# In[83]:
+# In[ ]:
 
 
 # Format partisan margins into human-readable strings (e.g., Trump+7.89 or Harris+4.12)
@@ -40,7 +40,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[84]:
+# In[ ]:
 
 
 # Compute continuous divergent RGB color ramps based on partisan vote margins
@@ -73,7 +73,7 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[85]:
+# In[ ]:
 
 
 # Filter and aggregate statistics exclusively for targeted or impacted districts
@@ -85,14 +85,18 @@ def format_district_code(code):
         return str(code)
     return f"{code[:2]}-{code[2:]}"
 
-favored_dem = int((gdf_targeted['Margin New'] > 0).sum())
-favored_rep = int((gdf_targeted['Margin New'] < 0).sum())
+# Topline redistricting results
+gdf_targeted = gdf[gdf["Targeted"] == True].copy()
+
+favored_dem = int((gdf_targeted["Target_Party"] == "DEM").sum())
+favored_rep = int((gdf_targeted["Target_Party"] == "GOP").sum())
 
 harris_new_pct = f"{gdf_targeted['Harris New'].mean() * 100:.1f}%"
 trump_new_pct  = f"{gdf_targeted['Trump New'].mean() * 100:.1f}%"
 harris_24_pct  = f"{gdf_targeted['Harris 24'].mean() * 100:.1f}%"
 trump_24_pct   = f"{gdf_targeted['Trump 24'].mean() * 100:.1f}%"
 
+# Topline related statistics
 raw_mean_shift = gdf_targeted['Margin Shift'].abs().mean() * 100
 mean_shift = f"{raw_mean_shift:.1f}%"
 
@@ -130,7 +134,7 @@ sidebar_context = {
 }
 
 
-# In[86]:
+# In[ ]:
 
 
 # Calculate national tipping point seats and congressional generic ballot advantage
@@ -200,20 +204,20 @@ sidebar_context.update({
 })
 
 
-# In[87]:
+# In[ ]:
 
 
 # Parse layout component templates and inject dynamic sidebar context data
-HEADER_HTML_CONTENT = open('./src/components/header.html', encoding='utf-8').read()
+HEADER_HTML_CONTENT = open('./templates/header.html', encoding='utf-8').read()
 
-with open('./src/components/sidebar.html', 'r', encoding='utf-8') as f:
+with open('./templates/sidebar.html', 'r', encoding='utf-8') as f:
     sidebar_template = f.read()
 
 for key, value in sidebar_context.items():
     sidebar_template = sidebar_template.replace(f"{{{key}}}", str(value))
 
 SIDEBAR_HTML_CONTENT = sidebar_template
-FOOTER_HTML_CONTENT = open('./src/components/footer.html', encoding='utf-8').read()
+FOOTER_HTML_CONTENT = open('./templates/footer.html', encoding='utf-8').read()
 
 LEGEND_BOUNDS = [-0.45, -0.23, -0.01, 0.0, 0.01, 0.23, 0.45]
 LEGEND_COLORS = ['#5A0000', '#C82828', '#FF6E6E', '#8C8C8C', '#ADD8E6', '#285AA0', '#050F32']
@@ -233,7 +237,7 @@ MAP_OPTIONS = {
 }
 
 
-# In[88]:
+# In[ ]:
 
 
 # Initialize and compile standalone Folium web maps with tile layers and custom UI elements
@@ -300,6 +304,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
         vmax=max(LEGEND_BOUNDS), 
         caption=legend_caption
     )
+    
     legend.tick_labels = LEGEND_TICKS
     legend.height = 45
     m.add_child(legend)
@@ -310,7 +315,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     
     # Master external assets for deployment to docs/
     m.get_root().header.add_child(folium.Element('<link rel="stylesheet" href="index.css">'))
-    m.get_root().html.add_child(folium.Element('<script src="scripts.js"></script>'))
+    m.get_root().html.add_child(folium.Element('<script src="js/main.js"></script>'))
     
     m.save(filename)
     print(f"Successfully compiled: {filename}")
@@ -335,7 +340,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[89]:
+# In[ ]:
 
 
 # Configure interactive hover tooltips for the map layers
@@ -354,7 +359,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[90]:
+# In[ ]:
 
 
 # Build and save the main margin lean map interface
