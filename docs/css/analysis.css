@@ -1,18 +1,22 @@
-
+/* ==========================================================================
+   PAGE LAYOUT & LIGHT EDITORIAL THEME
+   ========================================================================== */
 body.analysis-page {
   overflow-y: auto !important;
   background-color: #f8fafc;
-  color: #1e293b;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 .analysis-container {
-  max-width: 1040px;
-  margin: calc(var(--header-height) + 24px) auto 70px auto;
+  max-width: 1140px;
+  margin: calc(var(--header-height, 90px) + 24px) auto 80px auto;
   padding: 0 24px;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 32px;
 }
 
 .analysis-card {
@@ -20,57 +24,294 @@ body.analysis-page {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 32px 36px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 .analysis-card-header {
   border-bottom: 1.5px solid #f1f5f9;
-  padding-bottom: 14px;
+  padding-bottom: 20px;
   margin-bottom: 24px;
 }
 
 .analysis-card-title {
-  font-size: 1.55rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: #0f172a;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   margin: 0 0 6px 0;
 }
 
 .analysis-card-subtitle {
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   color: #64748b;
   margin: 0;
   font-weight: 500;
+  line-height: 1.5;
 }
 
-.wip-placeholder {
-  min-height: 260px;
-  background: #f8fafc;
-  border: 2px dashed #cbd5e1;
+/* ==========================================================================
+   SCENARIO CONTROLS (SHARED ACROSS BOTH CHARTS)
+   ========================================================================== */
+.chart-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.scenario-toggle-group {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 4px;
   border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  gap: 4px;
+}
+
+.scenario-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scenario-btn:hover {
+  color: #0f172a;
+}
+
+.scenario-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   DUAL CHART GRID & CANVAS CONTAINERS
+   ========================================================================== */
+.charts-dual-stack {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 36px;
+}
+
+.chart-sub-panel {
+  background: #ffffff;
+}
+
+.chart-sub-panel-header {
+  margin-bottom: 14px;
+}
+
+.chart-sub-panel-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.chart-sub-panel-desc {
+  font-size: 0.88rem;
   color: #64748b;
+  margin: 0;
 }
 
-.wip-badge {
-  background: #fef3c7;
-  color: #b45309;
-  font-size: 0.82rem;
+.chart-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 14px 12px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#gerrymander-chart {
+  min-width: 860px;
+  width: 100%;
+  position: relative;
+}
+
+#gerrymander-chart svg,
+#state-dilution-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ==========================================================================
+   D3 CHART ELEMENTS (LIGHT THEME)
+   ========================================================================== */
+.chart-grid-line {
+  stroke: #f1f5f9;
+  stroke-dasharray: 2, 2;
+}
+
+.chart-center-divider {
+  stroke: #cbd5e1;
+  stroke-width: 1.5px;
+}
+
+.chart-zero-line {
+  stroke: #d97706;
+  stroke-width: 1.8px;
+  stroke-dasharray: 4, 3;
+}
+
+.chart-threshold-label {
+  fill: #d97706;
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: end;
+}
+
+.chart-axis text {
+  fill: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chart-axis path,
+.chart-axis line {
+  stroke: #cbd5e1;
+}
+
+.chart-axis-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.chart-axis-label.dem-label {
+  fill: #2563eb;
+}
+
+.chart-axis-label.rep-label {
+  fill: #dc2626;
+}
+
+.chart-axis-label.y-axis-title {
+  fill: #475569;
+}
+
+/* District Dots & Labels */
+.district-dot {
+  stroke-width: 1.5px;
+  cursor: pointer;
+  fill-opacity: 0.85;
+  transition: fill-opacity 0.15s ease, stroke-width 0.15s ease;
+}
+
+.district-dot.dem {
+  fill: #2563eb;
+  stroke: #1d4ed8;
+}
+
+.district-dot.rep {
+  fill: #dc2626;
+  stroke: #b91c1c;
+}
+
+.district-dot:hover {
+  fill-opacity: 1 !important;
+  stroke-width: 3px !important;
+  stroke: #0f172a !important;
+}
+
+.chart-dot-label {
+  font-size: 11px;
+  font-weight: 700;
+  fill: #1e293b;
+  pointer-events: none;
+}
+
+.label-leader-line {
+  stroke: #94a3b8;
+  stroke-width: 1px;
+  stroke-dasharray: 2, 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.label-leader-line.active {
+  opacity: 0.7;
+}
+
+/* ==========================================================================
+   TOOLTIPS
+   ========================================================================== */
+.d3-chart-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  z-index: 100;
+  min-width: 210px;
+  will-change: transform;
+}
+
+.d3-chart-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tt-title {
+  font-size: 1.02rem;
   font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  color: #ffffff;
 }
 
+.tt-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  color: #cbd5e1;
+}
+
+.tt-row strong {
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.tt-row strong.dem-text {
+  color: #60a5fa !important;
+}
+
+.tt-row strong.rep-text {
+  color: #f87171 !important;
+}
+
+.tt-divider {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   METHODOLOGY CARDS & FORMULAS (LIGHT THEME)
+   ========================================================================== */
 .methodology-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   gap: 20px;
 }
 
@@ -78,7 +319,7 @@ body.analysis-page {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 20px;
+  padding: 22px;
 }
 
 .methodology-card h3 {
@@ -86,9 +327,6 @@ body.analysis-page {
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 10px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .methodology-card p {
@@ -99,14 +337,16 @@ body.analysis-page {
 }
 
 .methodology-formula {
-  background: #0f172a;
-  color: #f8fafc;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #2563eb;
   padding: 12px 14px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  margin: 10px 0;
+  margin: 12px 0;
 }
 
 .methodology-list {
@@ -116,3 +356,72 @@ body.analysis-page {
   font-size: 0.92rem;
   line-height: 1.55;
 }
+
+.methodology-list strong {
+  color: #0f172a;
+}
+
+.methodology-list code {
+  color: #0f172a;
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.88rem;
+}
+
+/* ==========================================================================
+   NODE GROUP, LABEL HALOS, & LEGEND
+   ========================================================================== */
+.district-node {
+  cursor: pointer;
+}
+
+.district-node circle {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill-opacity 0.15s ease, stroke-width 0.15s ease;
+}
+
+.district-node text {
+  font-size: 11px;
+  font-weight: 800;
+  fill: #1e293b;
+  pointer-events: all;
+  /* Crisp white halo around label so overlapping bubbles never occlude the text */
+  paint-order: stroke fill;
+  stroke: #ffffff;
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.district-node:hover circle {
+  fill-opacity: 1 !important;
+  stroke: #0f172a !important;
+  stroke-width: 3.5px !important;
+}
+
+.district-node:hover text {
+  fill: #0f172a !important;
+  font-size: 12px !important;
+}
+
+/* Tooltip Score Highlighting */
+.tt-row strong.score-highlight {
+  color: #fbbf24 !important;
+  font-size: 1.05rem !important;
+  font-weight: 900 !important;
+}
+
+/* Bubble Size Legend */
+.chart-size-legend text {
+  fill: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.chart-size-legend circle {
+  fill: none;
+  stroke: #94a3b8;
+  stroke-dasharray: 2, 2;
+  stroke-width: 1px;
+}
+

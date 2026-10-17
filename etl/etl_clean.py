@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[7]:
+# In[ ]:
 
 
 import os
@@ -48,7 +48,7 @@ states_gdf = pd.concat(all_gdfs, ignore_index=True)
 states_gdf.head(8)
 
 
-# In[8]:
+# In[ ]:
 
 
 # Load 2024 presidential totals from old boundaries
@@ -59,7 +59,7 @@ merged_gdf = states_gdf.merge(pres24, on='District', how='inner')
 merged_gdf.head(8)
 
 
-# In[9]:
+# In[ ]:
 
 
 # Rename columns to standard analytical schema
@@ -84,7 +84,7 @@ gdf_clean['Margin Shift'] = gdf_clean['Margin New'] - gdf_clean['Margin 24']
 gdf_clean.head()
 
 
-# In[10]:
+# In[ ]:
 
 
 # Ingest re-tabulated 2020 presidential returns for redrawn maps
@@ -132,7 +132,7 @@ gdf_clean['Margin 20'] = gdf_clean['Margin 20'].fillna(gdf_clean['Margin New'])
 gdf_clean.head()
 
 
-# In[11]:
+# In[ ]:
 
 
 # Load 2024 House summary attributes
@@ -181,7 +181,7 @@ if os.path.exists(house_path):
         house_df[['District_Hover', 'District_Name']] = house_df.apply(make_names, axis=1)
 
     merge_cols = [c for c in [
-        'District', 'House_Winner', 'House_Party', 'House_MOV_Raw', 
+        'District', 'House_Winner', 'Current_Rep', 'House_Party', 'House_MOV_Raw', 
         'House_Race_Type', 'Effective_House_Margin', 'District_Hover', 'District_Name'
     ] if c in house_df.columns]
     
@@ -210,18 +210,30 @@ gdf_clean['Partisan_Lean_Index'] = gdf_clean['Partisan Index'].apply(format_lean
 gdf_clean.head()
 
 
-# In[12]:
+# In[ ]:
 
 
-# Flag districts flipped by redistricting
+# Flag districts targeted for redistricting
 gdf_clean["Targeted"] = (gdf_clean["Margin New"] * gdf_clean["Margin 24"]) < 0
 gdf_clean["Targeted"] = gdf_clean["Targeted"].astype(bool)
 
-# Specific competitive district overrides
-gdf_clean.loc[gdf_clean["District"] == "CA09", "Targeted"] = False
+# Manual removals - false flags
+targeted_removals = ["CA09", "CA13", "FL13"]
+gdf_clean.loc[gdf_clean["District"].isin(targeted_removals), "Targeted"] = False
 
-targeted_additions = ["NC01", "OH09", "TX28", "TX34"]
+# Manual additions - missed flags
+targeted_additions = ["NC01", "OH09", "TX28", "TX34", "CA22"]
 gdf_clean.loc[gdf_clean["District"].isin(targeted_additions), "Targeted"] = True
+
+# Which Party the new district favors
+gdf_clean["Target_Party"] = None
+
+mask_targeted = gdf_clean["Targeted"] == True
+gdf_clean.loc[mask_targeted, "Target_Party"] = gdf_clean.loc[mask_targeted, "Margin Shift"].apply(
+    lambda s: "DEM" if s > 0 else "GOP"
+)
+
+gdf_clean.loc[gdf_clean["District"] == "CA22", "Target_Party"] = "DEM"
 
 reordered_columns = [
     "District No.",
@@ -235,6 +247,7 @@ reordered_columns = [
     "AsianPct",
     "Partisan_Lean_Index",
     "House_Winner",
+    "Current_Rep",
     "House_Party",
     "House_MOV_Raw",
     "House_Race_Type",
@@ -247,14 +260,14 @@ reordered_columns = [
     "Trump 24",
     "Margin 24",
     "Targeted",
+    "Target_Party",
     "geometry",
 ]
 
 export_columns = [col for col in reordered_columns if col in gdf_clean.columns]
 gdf_clean = gdf_clean[export_columns]
 
-export_path = os.path.join(data_dir, "map2026.geojson")
+export_path = "../docs/map2026.geojson"
 gdf_clean.to_file(export_path, driver="GeoJSON")
 print(f"Exported compiled district map layer to {export_path}")
-gdf_clean.head(10)
 

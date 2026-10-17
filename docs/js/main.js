@@ -355,4 +355,36 @@ document.addEventListener('click', function (e) {
     if (existingPopover && !e.target.closest('.metric-info-popover')) {
         existingPopover.remove();
     }
+
+    // Toggle State: '2026', 'neutral', or 'blended'
+    let currentMode = '2026';
+
+    function updateChart(mode) {
+        currentMode = mode;
+
+        // Select target value based on the active mode
+        svg.selectAll(".district-dot")
+            .transition()
+            .duration(650)
+            .ease(d3.easeCubicInOut)
+            .attr("cy", d => {
+                let score;
+                if (mode === '2026') score = 200 * ((d.p2026 / 100) - 0.50);
+                else if (mode === 'neutral') score = 200 * ((d.p2028 / 100) - 0.50);
+                else score = parseFloat(d.ges); // Blended
+                return yScale(score);
+            });
+
+        svg.selectAll(".dot-label")
+            .transition()
+            .duration(650)
+            .ease(d3.easeCubicInOut)
+            .attr("y", d => {
+                let score;
+                if (mode === '2026') score = 200 * ((d.p2026 / 100) - 0.50);
+                else if (mode === 'neutral') score = 200 * ((d.p2028 / 100) - 0.50);
+                else score = parseFloat(d.ges);
+                return yScale(score) - rScale(parseFloat(d.shift)) - 4;
+            });
+    }
 });
