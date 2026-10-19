@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function loadGeoJSON(pathIndex) {
             if (pathIndex >= candidatePaths.length) {
-                chartContainer.innerHTML = `<div style="padding:24px;text-align:center;color:#ef4444;font-weight:600;">Unable to load map2026.geojson. Ensure you are running via a web server.</div>`;
+                chartContainer.innerHTML = `<div style="padding:24px;text-align:center;color:#ef4444;font-weight:600;">Unable to load map2026.geojson. Make sure a local web server is running.</div>`;
                 return;
             }
 
@@ -165,9 +165,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = targetedFeatures.map(calculateMetrics);
 
             chartContainer.innerHTML = "";
-            const margin = { top: 35, right: 35, bottom: 65, left: 65 };
-            const width = 940 - margin.left - margin.right;
-            const height = 490 - margin.top - margin.bottom;
+            const margin = { top: 60, right: 65, bottom: 65, left: 65 };
+            const width = 960 - margin.left - margin.right;
+            const height = 520 - margin.top - margin.bottom;
 
             const svg = d3.select("#gerrymander-chart")
                 .append("svg")
@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
             const maxLean = d3.max(data, d => Math.abs(d.partisanIndex)) || 25;
-            const xDomainLimit = Math.max(25, Math.ceil(maxLean / 5) * 5);
+            const xDomainLimit = Math.max(30, Math.ceil(maxLean / 5) * 5);
 
             const xScale = d3.scaleLinear().domain([-xDomainLimit, xDomainLimit]).range([0, width]);
             const yScale = d3.scaleLinear().domain([-100, 100]).range([height, 0]);
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             svg.append("text").attr("class", "chart-threshold-label").attr("x", width - 8).attr("y", yScale(0) - 8).text("50% Toss-Up / Break-Even Threshold");
 
-            const xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(d => d === 0 ? "EVEN" : (d < 0 ? `D+${Math.abs(d)}` : `R+${d}`));
+            const xAxis = d3.axisBottom(xScale).ticks(12).tickFormat(d => d === 0 ? "EVEN" : (d < 0 ? `D+${Math.abs(d)}` : `R+${d}`));
             svg.append("g").attr("class", "chart-axis").attr("transform", `translate(0,${height})`).call(xAxis);
             svg.append("g").attr("class", "chart-axis").call(d3.axisLeft(yScale).ticks(8).tickFormat(d => d > 0 ? `+${d}` : d));
 
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const legBoxWidth = 275;
             const legBoxHeight = 32;
 
-            const legendCard = svg.append("g").attr("class", "chart-size-legend-card").attr("transform", `translate(${xScale(-34)}, ${legCenterY - (legBoxHeight / 2)})`);
+            const legendCard = svg.append("g").attr("class", "chart-size-legend-card").attr("transform", `translate(${xScale(-32)}, ${legCenterY - (legBoxHeight / 2)})`);
             legendCard.append("rect").attr("width", legBoxWidth).attr("height", legBoxHeight).attr("rx", 6).attr("fill", "#f8fafc").attr("stroke", "#cbd5e1").attr("stroke-width", 1.2);
             legendCard.append("circle").attr("cx", 18).attr("cy", legBoxHeight / 2).attr("r", 8).attr("fill", "#0f172a").attr("fill-opacity", 0.08).attr("stroke", "#0f172a").attr("stroke-width", 2).attr("stroke-dasharray", "3, 2");
             legendCard.append("text").attr("x", 34).attr("y", (legBoxHeight / 2) + 4).attr("font-size", "10.5px").attr("font-weight", "800").attr("fill", "#0f172a").text("Size of Shift in Partisan Lean from 2024 to 2026");
@@ -215,61 +215,104 @@ document.addEventListener("DOMContentLoaded", function () {
             let currentMode = "2026";
 
             function computePositions(mode) {
-                const items = data.map((d, index) => {
+                const nodes = data.map(d => {
                     const cx = xScale(d.party === "DEM" ? -Math.abs(d.partisanIndex) : Math.abs(d.partisanIndex));
                     const cy = yScale(getActiveY(d, mode));
                     const r = rScale(d.absShift);
-
-                    let initX = cx;
-                    let initY = cy;
-                    let anchor = "middle";
-
-                    if (cy < yScale(70)) {
-                        initY = cy + r + 16;
-                        initX = (index % 2 === 0) ? cx - 6 : cx + 6;
-                        anchor = "middle";
-                    } else if (cy < yScale(30)) {
-                        initX = cx + r + 18;
-                        initY = (index % 2 === 0) ? cy - 8 : cy + 8;
-                        anchor = "start";
-                    } else {
-                        if (index % 2 === 0) { initX = cx + r + 16; initY = cy + 4; anchor = "start"; }
-                        else { initX = cx - r - 16; initY = cy + 4; anchor = "end"; }
-                    }
-                    return { index, d, cx, cy, r, x: initX, y: initY, anchor, w: 48, h: 16 };
+                    return { d, cx, cy, r };
                 });
 
-                for (let iter = 0; iter < 10; iter++) {
-                    for (let i = 0; i < items.length; i++) {
-                        const a = items[i];
-                        for (let j = 0; j < items.length; j++) {
-                            const circle = items[j];
-                            const dCircle = Math.hypot(a.x - circle.cx, a.y - circle.cy);
-                            const safeDist = circle.r + 14;
-                            if (dCircle < safeDist) {
-                                const angle = Math.atan2(a.y - circle.cy, a.x - circle.cx);
-                                a.x = circle.cx + Math.cos(angle) * (safeDist + 2);
-                                a.y = circle.cy + Math.sin(angle) * (safeDist + 2);
-                            }
-                        }
-                        for (let j = i + 1; j < items.length; j++) {
-                            const b = items[j];
-                            const dx = a.x - b.x;
-                            const dy = a.y - b.y;
-                            if (Math.abs(dx) < 46 && Math.abs(dy) < 16) {
-                                if (dy >= 0) { a.y += 8; b.y -= 8; } else { a.y -= 8; b.y += 8; }
-                            }
+                // Sort left-to-right for consistent processing order
+                nodes.sort((a, b) => a.cx - b.cx);
+
+                const labelW = 56;
+                const labelH = 16;
+                const placedLabels = [];
+
+                // Strict box-to-circle collision check
+                function boxCollidesWithCircles(x, y) {
+                    const l = x - labelW / 2 - 4;
+                    const r_box = x + labelW / 2 + 4;
+                    const t = y - labelH / 2 - 4;
+                    const b = y + labelH / 2 + 4;
+
+                    for (let node of nodes) {
+                        const closestX = Math.max(l, Math.min(node.cx, r_box));
+                        const closestY = Math.max(t, Math.min(node.cy, b));
+                        const distX = node.cx - closestX;
+                        const distY = node.cy - closestY;
+                        if ((distX * distX + distY * distY) < (node.r + 6) ** 2) {
+                            return true;
                         }
                     }
+                    return false;
                 }
 
-                items.forEach(item => {
-                    if (item.y < 16) item.y = 16;
-                    if (item.y > height - 12) item.y = height - 12;
-                    if (item.x < 38) { item.x = 38; item.anchor = "start"; }
-                    if (item.x > width - 38) { item.x = width - 38; item.anchor = "end"; }
+                // Strict rectangular bounding box (AABB) intersection check for text labels
+                function boxCollidesWithLabels(x, y) {
+                    const l1 = x - labelW / 2;
+                    const r1 = x + labelW / 2;
+                    const t1 = y - labelH / 2;
+                    const b1 = y + labelH / 2;
+
+                    for (let p of placedLabels) {
+                        const l2 = p.x - labelW / 2;
+                        const r2 = p.x + labelW / 2;
+                        const t2 = p.y - labelH / 2;
+                        const b2 = p.y + labelH / 2;
+
+                        // Check for overlap with padding buffer
+                        if (l1 < r2 + 6 && r1 > l2 - 6 && t1 < b2 + 4 && b1 > t2 - 4) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                return nodes.map(node => {
+                    const cx = node.cx;
+                    const cy = node.cy;
+                    const r = node.r;
+
+                    let bestY = cy - r - 18;
+                    let found = false;
+
+                    // Fine-grained vertical steps covering the entire Y-axis space as needed
+                    const verticalSteps = [
+                        18, 24, 30, 36, 42, 48, 54, 62, 70, 80, 90, 102, 114, 128, 144, 162, 182, 204
+                    ];
+
+                    // 1. Try strictly above first, stretching upward
+                    for (let offset of verticalSteps) {
+                        let ty = cy - r - offset;
+                        if (ty >= 20 && !boxCollidesWithCircles(cx, ty) && !boxCollidesWithLabels(cx, ty)) {
+                            bestY = ty;
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    // 2. If above is blocked, try strictly beneath, stretching downward
+                    if (!found) {
+                        for (let offset of verticalSteps) {
+                            let ty = cy + r + offset;
+                            if (ty <= height - 16 && !boxCollidesWithCircles(cx, ty) && !boxCollidesWithLabels(cx, ty)) {
+                                bestY = ty;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Ultimate fallback
+                    if (!found) {
+                        bestY = Math.max(20, Math.min(height - 16, cy - r - 220));
+                    }
+
+                    const placed = { d: node.d, cx, cy, r, x: cx, y: bestY, anchor: "middle" };
+                    placedLabels.push(placed);
+                    return placed;
                 });
-                return items;
             }
 
             let positions = computePositions(currentMode);
@@ -298,7 +341,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     const pColorClass = d.party === "DEM" ? "dem-text" : "rep-text";
                     const pIndexDisplay = d.partisanIndex > 0 ? `D+${d.partisanIndex}` : (d.partisanIndex < 0 ? `R+${Math.abs(d.partisanIndex)}` : "EVEN");
                     const shiftColorClass = d.signedShift >= 0 ? "dem-text" : "rep-text";
-                    const shiftDisplay = d.signedShift >= 0 ? `D +${d.signedShift.toFixed(2)}%` : `R +${Math.abs(d.signedShift).toFixed(2)}%`;
+                    // 1-decimal formatting
+                    const shiftDisplay = d.signedShift >= 0 ? `D +${d.signedShift.toFixed(1)}%` : `R +${Math.abs(d.signedShift).toFixed(1)}%`;
                     const repPartyClass = String(d.repParty).toUpperCase().startsWith("D") ? "dem-text" : (String(d.repParty).toUpperCase().startsWith("R") ? "rep-text" : "");
 
                     tooltip.classed("visible", true)
@@ -360,26 +404,25 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================================================================
-    // 2. STATE-LEVEL DELEGATION & DILUTION RISK CHART
+    // 2. STATE-LEVEL DELEGATION CHANGES (CHART 2)
     // =========================================================================
     function renderStateChart() {
         const stateChartContainer = document.getElementById("state-delegation-chart");
         if (!stateChartContainer) return;
 
-        // Accurate consensus expected values reflecting realistic wave resilience
         const stateDelegationData = [
             { state: "California", abbr: "CA", party: "DEM", targeted: 5, ev2026: 4.75, evNeutral: 4.15, preDem: 43, preRep: 9, totalSeats: 52, targetDem: 48, targetRep: 4 },
             { state: "Texas", abbr: "TX", party: "REP", targeted: 5, ev2026: 3.10, evNeutral: 3.87, preDem: 13, preRep: 25, totalSeats: 38, targetDem: 8, targetRep: 30 },
             { state: "Florida", abbr: "FL", party: "REP", targeted: 4, ev2026: 2.85, evNeutral: 3.60, preDem: 8, preRep: 20, totalSeats: 28, targetDem: 4, targetRep: 24 },
             { state: "Ohio", abbr: "OH", party: "REP", targeted: 2, ev2026: 1.25, evNeutral: 1.75, preDem: 5, preRep: 10, totalSeats: 15, targetDem: 3, targetRep: 12 },
-            { state: "North Carolina", abbr: "NC", party: "REP", targeted: 1, ev2026: 0.15, evNeutral: 0.85, preDem: 4, preRep: 10, totalSeats: 14, targetDem: 3, targetRep: 11 },
+            { state: "North Carolina", abbr: "NC", party: "REP", targeted: 1, ev2026: 0.30, evNeutral: 0.42, preDem: 4, preRep: 10, totalSeats: 14, targetDem: 3, targetRep: 11 },
             { state: "Tennessee", abbr: "TN", party: "REP", targeted: 1, ev2026: 0.95, evNeutral: 0.98, preDem: 1, preRep: 8, totalSeats: 9, targetDem: 0, targetRep: 9 },
             { state: "Alabama", abbr: "AL", party: "REP", targeted: 1, ev2026: 0.88, evNeutral: 0.95, preDem: 2, preRep: 5, totalSeats: 7, targetDem: 1, targetRep: 6 },
             { state: "Louisiana", abbr: "LA", party: "REP", targeted: 1, ev2026: 0.85, evNeutral: 0.92, preDem: 2, preRep: 4, totalSeats: 6, targetDem: 1, targetRep: 5 }
         ];
 
         stateChartContainer.innerHTML = "";
-        const margin = { top: 35, right: 45, bottom: 65, left: 65 };
+        const margin = { top: 45, right: 65, bottom: 65, left: 65 };
         const width = 940 - margin.left - margin.right;
         const height = 460 - margin.top - margin.bottom;
 
@@ -390,22 +433,16 @@ document.addEventListener("DOMContentLoaded", function () {
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
         const xScale = d3.scaleLinear().domain([-6, 6]).range([0, width]);
-        const yScale = d3.scaleLinear().domain([-1.5, 5.5]).range([height, 0]);
+        // Negative Y-axis ending at -0.5 (half-row buffer)[cite: 18, 23]
+        const yScale = d3.scaleLinear().domain([-0.5, 5.5]).range([height, 0]);
 
         svg.append("g").attr("class", "chart-grid-line").call(d3.axisLeft(yScale).ticks(7).tickSize(-width).tickFormat(""));
         svg.append("line").attr("class", "chart-center-divider").attr("x1", xScale(0)).attr("x2", xScale(0)).attr("y1", 0).attr("y2", height);
         svg.append("line").attr("class", "chart-zero-line").attr("x1", 0).attr("x2", width).attr("y1", yScale(0)).attr("y2", yScale(0));
 
-        svg.append("text")
-            .attr("class", "dummymander-watermark")
-            .attr("x", 12)
-            .attr("y", yScale(0) + 16)
-            .text("DUMMYMANDER TERRITORY");
-
         svg.append("g").attr("class", "chart-axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xScale).ticks(12).tickFormat(d => Math.abs(d)));
         svg.append("g").attr("class", "chart-axis").call(d3.axisLeft(yScale).ticks(7).tickFormat(d => d > 0 ? `+${d.toFixed(1)}` : d.toFixed(1)));
 
-        // Reinstated Center Title and Directional Labels with Arrows
         svg.append("text")
             .attr("class", "chart-axis-label")
             .attr("x", width / 2)
@@ -442,7 +479,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function getEV(d, mode) { return mode === "neutral" ? d.evNeutral : d.ev2026; }
 
-        // Bulletproof non-colliding positioning for all 8 states in both 2026 & Neutral modes
+        // Clean vertical fanning for the cluster of states sharing x = 1[cite: 31]
         function getPositions(mode) {
             return stateDelegationData.map(d => {
                 const cx = xScale(d.party === "DEM" ? -d.targeted : d.targeted);
@@ -457,19 +494,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else if (d.abbr === "FL") {
                     lx = cx; ly = cy + r + 14; anchor = "middle";
                 } else if (d.abbr === "OH") {
-                    lx = cx + r + 10; ly = cy + 4; anchor = "start";
+                    lx = cx + r + 14; ly = cy + 4; anchor = "start";
                 } else if (d.abbr === "TN") {
-                    lx = cx - 38; ly = cy - 20; anchor = "end";
-                } else if (d.abbr === "AL") {
-                    lx = cx - 38; ly = cy + 4; anchor = "end";
+                    // Top in stack: up-left diagonal
+                    lx = cx - 42; ly = cy - 26; anchor = "end";
                 } else if (d.abbr === "LA") {
-                    lx = cx + 32; ly = cy + 24; anchor = "start";
+                    // Middle in stack: directly horizontal to the left
+                    lx = cx - 42; ly = cy - 2; anchor = "end";
+                } else if (d.abbr === "AL") {
+                    // Bottom in stack: down-left diagonal
+                    lx = cx - 42; ly = cy + 22; anchor = "end";
                 } else if (d.abbr === "NC") {
-                    if (mode === "neutral") {
-                        lx = cx - 38; ly = cy + 24; anchor = "end";
-                    } else {
-                        lx = cx; ly = cy + r + 14; anchor = "middle";
-                    }
+                    // North Carolina sits cleanly on the right
+                    lx = cx + 38; ly = cy + 4; anchor = "start";
                 }
 
                 return { d, cx, cy, r, lx, ly, anchor };
@@ -489,8 +526,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const currentEV = getEV(d, currentStateMode);
                 const intGain = Math.round(currentEV);
 
-                // 3-Tier Outcome Colors: Green for full target, Yellow for partial pickup, Red for net loss
-                let outcomeColor = "#ef4444";
+                let outcomeColor = "#10b981";
                 if (intGain >= d.targeted) {
                     outcomeColor = "#10b981";
                 } else if (intGain > 0) {
@@ -532,34 +568,29 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .on("mouseout", function () { tooltip.classed("visible", false); });
 
-        // Transparent hit buffer along the leader path
         stateNodes.append("line")
             .attr("class", "leader-hover-buffer")
             .attr("stroke", "transparent")
             .attr("stroke-width", "16px")
             .attr("x1", d => d.cx).attr("y1", d => d.cy).attr("x2", d => d.lx).attr("y2", d => d.ly);
 
-        // Visible leader line
         stateNodes.append("line")
             .attr("class", "state-leader-line")
             .attr("stroke", "#64748b").attr("stroke-width", "1.2px").attr("stroke-dasharray", "3, 2")
             .attr("opacity", d => Math.hypot(d.lx - d.cx, d.ly - d.cy) > (d.r + 14) ? 0.85 : 0)
             .attr("x1", d => d.cx).attr("y1", d => d.cy).attr("x2", d => d.lx).attr("y2", d => d.ly);
 
-        // Solid black circle node border with cyan hover glow
         stateNodes.append("circle")
             .attr("cx", d => d.cx).attr("cy", d => d.cy).attr("r", d => d.r)
             .attr("fill", "#ffffff")
             .attr("stroke", "#0f172a")
             .attr("stroke-width", "2.2px");
 
-        // State shape image icon
         stateNodes.append("image")
             .attr("xlink:href", d => `images/${d.d.abbr}_shape.png`)
             .attr("x", d => d.cx - 13).attr("y", d => d.cy - 13).attr("width", 26).attr("height", 26)
             .style("pointer-events", "none");
 
-        // Full State Name Text with pointer events enabled
         stateNodes.append("text")
             .attr("class", "state-name-text")
             .attr("x", d => d.lx).attr("y", d => d.ly + 4).attr("text-anchor", d => d.anchor)
