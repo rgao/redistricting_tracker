@@ -1,11 +1,11 @@
 /* ==========================================================================
-   PAGE LAYOUT & LIGHT EDITORIAL THEME
+   PAGE LAYOUT & VOTEHUB EDITORIAL TYPOGRAPHY
    ========================================================================== */
 body.analysis-page {
   overflow-y: auto !important;
   background-color: #f8fafc;
   color: #0f172a;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -50,7 +50,7 @@ body.analysis-page {
 }
 
 /* ==========================================================================
-   SCENARIO CONTROLS (SHARED ACROSS BOTH CHARTS)
+   SCENARIO TOGGLE CONTROLS
    ========================================================================== */
 .chart-header-row {
   display: flex;
@@ -92,7 +92,7 @@ body.analysis-page {
 }
 
 /* ==========================================================================
-   DUAL CHART GRID & CANVAS CONTAINERS
+   CHART CANVASES & D3 TYPOGRAPHY (VOTEHUB INITIATED)
    ========================================================================== */
 .charts-dual-stack {
   display: flex;
@@ -133,22 +133,22 @@ body.analysis-page {
   -webkit-overflow-scrolling: touch;
 }
 
-#gerrymander-chart {
+#gerrymander-chart,
+#state-delegation-chart {
   min-width: 860px;
   width: 100%;
   position: relative;
 }
 
 #gerrymander-chart svg,
-#state-dilution-chart svg {
+#state-delegation-chart svg {
   width: 100%;
   height: auto;
   display: block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ==========================================================================
-   D3 CHART ELEMENTS (LIGHT THEME)
-   ========================================================================== */
+/* Axis & Gridlines */
 .chart-grid-line {
   stroke: #f1f5f9;
   stroke-dasharray: 2, 2;
@@ -170,6 +170,14 @@ body.analysis-page {
   font-size: 11px;
   font-weight: 700;
   text-anchor: end;
+}
+
+.dummymander-watermark {
+  fill: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-anchor: start;
 }
 
 .chart-axis text {
@@ -201,7 +209,7 @@ body.analysis-page {
   fill: #475569;
 }
 
-/* District Dots & Labels */
+/* District Dots & State Nodes */
 .district-dot {
   stroke-width: 1.5px;
   cursor: pointer;
@@ -245,6 +253,50 @@ body.analysis-page {
   opacity: 0.7;
 }
 
+/* State Node Interaction (Circle + Image + Leader Line + Label) */
+.state-scatter-node {
+  cursor: pointer;
+  pointer-events: all !important;
+}
+
+.state-scatter-node circle {
+  pointer-events: all;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease;
+}
+
+/* Appropriate active hover highlight: electric cyan/blue border with glow */
+.state-scatter-node:hover circle {
+  stroke: #38bdf8 !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 2px 8px rgba(56, 189, 248, 0.45));
+}
+
+.state-scatter-node:hover text.state-name-text {
+  fill: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+.state-name-text {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  fill: #334155 !important;
+  cursor: pointer !important;
+  pointer-events: all !important;
+  paint-order: stroke fill;
+  stroke: #ffffff;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.state-leader-line {
+  stroke: #64748b;
+  stroke-width: 1.2px;
+  stroke-dasharray: 3, 2;
+  cursor: pointer;
+  pointer-events: stroke !important;
+}
+
 /* ==========================================================================
    TOOLTIPS
    ========================================================================== */
@@ -263,7 +315,7 @@ body.analysis-page {
   visibility: hidden;
   transition: opacity 0.15s ease, visibility 0.15s ease;
   z-index: 100;
-  min-width: 210px;
+  min-width: 220px;
   will-change: transform;
 }
 
@@ -292,10 +344,12 @@ body.analysis-page {
   color: #ffffff;
 }
 
+.dem-text,
 .tt-row strong.dem-text {
   color: #60a5fa !important;
 }
 
+.rep-text,
 .tt-row strong.rep-text {
   color: #f87171 !important;
 }
@@ -368,60 +422,3 @@ body.analysis-page {
   border-radius: 4px;
   font-size: 0.88rem;
 }
-
-/* ==========================================================================
-   NODE GROUP, LABEL HALOS, & LEGEND
-   ========================================================================== */
-.district-node {
-  cursor: pointer;
-}
-
-.district-node circle {
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill-opacity 0.15s ease, stroke-width 0.15s ease;
-}
-
-.district-node text {
-  font-size: 11px;
-  font-weight: 800;
-  fill: #1e293b;
-  pointer-events: all;
-  /* Crisp white halo around label so overlapping bubbles never occlude the text */
-  paint-order: stroke fill;
-  stroke: #ffffff;
-  stroke-width: 3.5px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.district-node:hover circle {
-  fill-opacity: 1 !important;
-  stroke: #0f172a !important;
-  stroke-width: 3.5px !important;
-}
-
-.district-node:hover text {
-  fill: #0f172a !important;
-  font-size: 12px !important;
-}
-
-/* Tooltip Score Highlighting */
-.tt-row strong.score-highlight {
-  color: #fbbf24 !important;
-  font-size: 1.05rem !important;
-  font-weight: 900 !important;
-}
-
-/* Bubble Size Legend */
-.chart-size-legend text {
-  fill: #64748b;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.chart-size-legend circle {
-  fill: none;
-  stroke: #94a3b8;
-  stroke-dasharray: 2, 2;
-  stroke-width: 1px;
-}
-

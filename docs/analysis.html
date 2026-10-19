@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analysis & Methodology | Mid-Decade Redistricting</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon.ico">
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="css/analysis.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -31,7 +32,7 @@
     <!-- Main Content Container -->
     <main class="analysis-container">
 
-        <!-- SECTION 1: CHARTS & VISUAL ANALYTICS -->
+        <!-- SECTION 1: VISUAL ANALYTICS -->
         <section class="analysis-card">
             <div class="analysis-card-header">
                 <div class="chart-header-row">
@@ -41,7 +42,7 @@
                             gerrymandering, including likelihood of successful flips and the risk of a "dummymander",
                             against the 2026 electoral environment and a neutral environment.</p>
                     </div>
-                    <!-- Master Scenario Toggle (Controls Both Charts) -->
+                    <!-- EnvironmentToggle Control -->
                     <div class="scenario-toggle-group">
                         <button type="button" class="scenario-btn active" data-mode="2026">2026 Midterm (D+8.0
                             Environment)</button>
@@ -55,9 +56,12 @@
                 <!-- Chart 1: Targeted Districts -->
                 <div class="chart-sub-panel">
                     <div class="chart-sub-panel-header">
-                        <h3 class="chart-sub-panel-title">Gerrymander Efficacy of Individual Districts</h3>
+                        <h3 class="chart-sub-panel-title">Redistricting Effectiveness of Individual Districts</h3>
                         <p class="chart-sub-panel-desc">Flip probability and margin shift magnitude across individually
                             redrawn congressional seats.</p>
+                        <p class="chart-environment-indicator" id="chart1-env-label"
+                            style="font-size: 0.82rem; font-weight: 700; color: #2563eb; margin: 6px 0 0 0;">Active
+                            Environment: 2026 Midterm (D+8.0)</p>
                     </div>
                     <div class="chart-canvas-wrapper">
                         <div id="gerrymander-chart"></div>
@@ -65,15 +69,17 @@
                     </div>
                 </div>
 
-                <!-- Chart 2: State-Level Dilution & Efficiency -->
+                <!-- Chart 2: State-Level Delegation & Dilution Risk -->
                 <div class="chart-sub-panel">
                     <div class="chart-sub-panel-header">
-                        <h3 class="chart-sub-panel-title">State-Level Delegation and Dilution Risk</h3>
-                        <p class="chart-sub-panel-desc">Net seat exposure and map durability across statewide
-                            delegations subject to mid-decade cartographic alterations.</p>
+                        <h3 class="chart-sub-panel-title">State-Level Delegation and District Dilution Risk</h3>
+                        <p class="chart-sub-panel-desc">Expected value of net seat change against the target of each gerrymandered state, and the risk of a dummymander.</p>
+                        <p class="chart-environment-indicator" id="chart2-env-label"
+                            style="font-size: 0.82rem; font-weight: 700; color: #2563eb; margin: 6px 0 0 0;">Active
+                            Environment: 2026 Midterm (D+8.0)</p>
                     </div>
                     <div class="chart-canvas-wrapper">
-                        <div id="state-dilution-chart"></div>
+                        <div id="state-delegation-chart"></div>
                         <div id="state-tooltip" class="d3-chart-tooltip"></div>
                     </div>
                 </div>
@@ -81,12 +87,12 @@
             </div>
         </section>
 
-        <!-- SECTION 2: METHODOLOGY & MATHEMATICAL FORMULATIONS -->
+        <!-- SECTION 2: METHODOLOGY AND METRICS -->
         <section class="analysis-card">
             <div class="analysis-card-header">
-                <h2 class="analysis-card-title">Metrics & Mathematical Methodology</h2>
-                <p class="analysis-card-subtitle">Documentation of electoral formulas, data pipeline imputation, and
-                    statistical baselines.</p>
+                <h2 class="analysis-card-title">Methodology and Metrics Explained(WORK IN PROGRESS - IGNORE FOR NOW)</h2>
+                <!-- <p class="analysis-card-subtitle">Documentation of electoral formulas, data pipeline imputation, and
+                    statistical baselines.</p> -->
             </div>
 
             <div class="methodology-grid">
