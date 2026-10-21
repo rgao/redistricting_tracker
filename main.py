@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[10]:
 
 
 import os
@@ -19,7 +19,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[ ]:
+# In[11]:
 
 
 # Format partisan margins into human-readable strings (e.g., Trump+7.89 or Harris+4.12)
@@ -40,7 +40,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[ ]:
+# In[12]:
 
 
 # Compute continuous divergent RGB color ramps based on partisan vote margins
@@ -73,7 +73,7 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[ ]:
+# In[13]:
 
 
 # Filter and aggregate statistics exclusively for targeted or impacted districts
@@ -134,7 +134,7 @@ sidebar_context = {
 }
 
 
-# In[ ]:
+# In[14]:
 
 
 # Calculate national tipping point seats and congressional generic ballot advantage
@@ -204,7 +204,7 @@ sidebar_context.update({
 })
 
 
-# In[ ]:
+# In[15]:
 
 
 # Parse layout component templates and inject dynamic sidebar context data
@@ -237,7 +237,7 @@ MAP_OPTIONS = {
 }
 
 
-# In[ ]:
+# In[16]:
 
 
 # Initialize and compile standalone Folium web maps with tile layers and custom UI elements
@@ -313,14 +313,14 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     m.get_root().html.add_child(folium.Element(SIDEBAR_HTML_CONTENT))
     m.get_root().html.add_child(folium.Element(FOOTER_HTML_CONTENT))
     
-    # Master external assets for deployment to docs/
     m.get_root().header.add_child(folium.Element('<link rel="stylesheet" href="index.css">'))
     m.get_root().html.add_child(folium.Element('<script src="js/main.js"></script>'))
+    m.get_root().header.add_child(folium.Element('<link rel="icon" type="image/png" sizes="32x32" href="./favicon.ico">'))
     
     m.save(filename)
     print(f"Successfully compiled: {filename}")
 
-    # Inline style injection specifically for Jupyter notebook iframe rendering
+    # Inline injections for jupyter notebook rendering
     css_files = [
         "docs/css/map.css",
         "docs/css/header.css",
@@ -340,7 +340,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[ ]:
+# In[17]:
 
 
 # Configure interactive hover tooltips for the map layers
@@ -359,7 +359,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[ ]:
+# In[18]:
 
 
 # Build and save the main margin lean map interface

@@ -32,7 +32,7 @@
     <!-- Main Content Container -->
     <main class="analysis-container">
 
-        <!-- SECTION 1: VISUAL ANALYTICS -->
+        <!-- SECTION 1: CHARTS -->
         <section class="analysis-card">
             <div class="analysis-card-header">
                 <div class="chart-header-row">
@@ -42,10 +42,9 @@
                             gerrymandering, including likelihood of successful flips of targeted seats,
                             against the 2026 electoral environment and a neutral environment.</p>
                     </div>
-                    <!-- EnvironmentToggle Control -->
+                    <!-- Environment Toggle Control -->
                     <div class="scenario-toggle-group">
-                        <button type="button" class="scenario-btn active" data-mode="2026">2026 Midterm (D+8.0
-                            Environment)</button>
+                        <button type="button" class="scenario-btn active" data-mode="2026">2026 Midterm (D+8.0 Environment)</button>
                         <button type="button" class="scenario-btn" data-mode="neutral">Neutral Environment</button>
                     </div>
                 </div>
@@ -56,12 +55,10 @@
                 <!-- Chart 1: Targeted Districts -->
                 <div class="chart-sub-panel">
                     <div class="chart-sub-panel-header">
-                        <h3 class="chart-sub-panel-title">Redistricting Effectiveness of Individual Districts</h3>
-                        <p class="chart-sub-panel-desc">Flip probability and margin shift magnitude across individually
-                            redrawn congressional seats.</p>
+                        <h3 class="chart-sub-panel-title">Redistricting Effectiveness on Individual Districts</h3>
+                        <p class="chart-sub-panel-desc">Flip probability and margin shift magnitude across individually redrawn congressional seats.</p>
                         <p class="chart-environment-indicator" id="chart1-env-label"
-                            style="font-size: 0.82rem; font-weight: 700; color: #2563eb; margin: 6px 0 0 0;">Active
-                            Environment: 2026 Midterm (D+8.0)</p>
+                            style="font-size: 0.82rem; font-weight: 700; color: #2563eb; margin: 6px 0 0 0;">Active Environment: 2026 Midterm (D+8.0)</p>
                     </div>
                     <div class="chart-canvas-wrapper">
                         <div id="gerrymander-chart"></div>
@@ -75,8 +72,7 @@
                         <h3 class="chart-sub-panel-title">State-Level Delegation Changes</h3>
                         <p class="chart-sub-panel-desc">Expected value of net seat change against the target of each gerrymandered state.</p>
                         <p class="chart-environment-indicator" id="chart2-env-label"
-                            style="font-size: 0.82rem; font-weight: 700; color: #2563eb; margin: 6px 0 0 0;">Active
-                            Environment: 2026 Midterm (D+8.0)</p>
+                            style="font-size: 0.82rem; font-weight: 700; color: #2563eb; margin: 6px 0 0 0;">Active Environment: 2026 Midterm (D+8.0)</p>
                     </div>
                     <div class="chart-canvas-wrapper">
                         <div id="state-delegation-chart"></div>
@@ -90,96 +86,105 @@
         <!-- SECTION 2: METHODOLOGY AND METRICS -->
         <section class="analysis-card">
             <div class="analysis-card-header">
-                <h2 class="analysis-card-title">Methodology and Metrics Explained(WORK IN PROGRESS - IGNORE FOR NOW)</h2>
-                <!-- <p class="analysis-card-subtitle">Documentation of electoral formulas, data pipeline imputation, and
-                    statistical baselines.</p> -->
+                <h2 class="analysis-card-title">Methodology & Metrics</h2>
             </div>
 
+            <!-- Disclaimer Card -->
+            <div class="methodology-card disclaimer-card">
+                <h3>Disclaimer: Model Limits</h3>
+                <p>
+                    <strong>This tool is visualizes redistricting and its potential impact, and is not a live election forecast.</strong>
+                    Platforms like DDHQ, Cook Political Report, and VoteHub produce dynamic forecasts that
+                    incorporate daily polling averages, candidate fundraising ratios, advertising expenditures, and
+                    campaign developments. In contrast, this simple model takes into account only static electoral fundamentals
+                    by simulating baseline performance under uniform national swings. The charts should nonetheless reflect reality, 
+                    with the exception of FL-22, which our model underestimates the flip chance of due to our limitations.
+                </p>
+            </div>
+
+            <!-- Top Tier: Side-by-Side Breakdown of Chart 1 & Chart 2 -->
             <div class="methodology-grid">
 
-                <!-- Partisan Index -->
+                <!-- Chart 1 Framework -->
                 <div class="methodology-card">
-                    <h3>Partisan Index</h3>
-                    <p>Measures the baseline partisan environment of each district. It is computed as a weighted blend
-                        of the reallocated 2024 presidential margin and the re-tabulated 2020 presidential return,
-                        normalized against national popular vote baselines:</p>
+                    <h3>Chart 1: Redistricting Effectiveness on Individual Districts</h3>
+                    <p>Calculates whether redrawn district lines actually hold up under midterm wave conditions versus a neutral national baseline.</p>
+
+                    <p><strong>1. Partisan Baseline & Electoral Elasticity:</strong><br>
+                        District baseline lean is adjusted by state-level swing elasticity (<code>β_env</code>) and incumbent status under national partisan swings:</p>
                     <div class="methodology-formula">
-                        Index = (0.70 × 2024 Pres. Margin Normalized) + (0.30 × 2020 Pres. Margin Normalized)
+                        μ = Partisan_Index + (β_env × National_Environment) + Incumbency_Offset
                     </div>
-                    <p>Reported to 1 decimal place as a signed rating (e.g., <code>D +8.5</code> or
-                        <code>R +55.9</code>). Positive values denote a Democratic advantage; negative values denote a
-                        Republican advantage.
-                    </p>
-                </div>
+                    <p>where National_Environment is expected to be 8.0 for the 2026 midterms due to aggregate polling, and 0 in a neutral environment.</p>
 
-                <!-- Gerrymander Effectiveness Score -->
-                <div class="methodology-card">
-                    <h3>Gerrymander Effectiveness & Durability (GES)</h3>
-                    <p>Quantifies how reliably a redraw flips or retains a seat across different national political
-                        climates using a logistic win-probability function (σ = 5.5%):</p>
+                    <p><strong>2. Flip Probability:</strong><br>
+                        Seat retention and flip odds are modeled using a logistic curve calibrated to historical House midterm variance (<code>σ = 5.5</code>):</p>
                     <div class="methodology-formula">
-                        GES = 200 × (P_win - 0.50)
+                        P(Dem Win) = 1 / (1 + exp(-μ / 5.5))
                     </div>
-                    <p>Truncated to [-50, +100]. Positive values indicate an effective gerrymander (>50% win
-                        probability), zero represents a toss-up, and negative values denote vulnerability to seat loss
-                        during adverse wave conditions.</p>
+
+                    <p><strong>3. Effectiveness Score:</strong><br>
+                        The effectiveness score is taken as the average of the flip probabilities in both environments:</p>
+                    <div class="methodology-formula">
+                        Effectiveness Score = ((P_flip_2026 + P_flip_neutral) / 2) × 100
+                    </div>
+                    <p>A score of 100% indicates a statistical guarantee to flip in either environment, while a low score indicates an ineffective gerrymander where the targeted seat is favored to hold for the incumbent party.</p>
                 </div>
 
-                <!-- Electoral Edge Cases & Imputation -->
+                <!-- Chart 2 Framework -->
                 <div class="methodology-card">
-                    <h3>Edge-Case Handling & Jungle Primaries</h3>
-                    <p>Standard two-party general elections do not occur in all seats. To prevent mathematical
-                        distortions, we apply a strict 3-tier hierarchy[cite: 2]:</p>
+                    <h3>Chart 2: State Delegation Expected Seat Shifts</h3>
+                    <p>Aggregates district-level probabilities to display the state's expected seat shifts due to redistricting.</p>
+
+                    <p><strong>1. Expected Net Gain (EV):</strong><br>
+                        Sum of independent flip probabilities across all redrawn seats targeted by a state party:</p>
+                    <div class="methodology-formula">
+                        EV = Σ P_flip(District_i)
+                    </div>
+
+                    <p><strong>2. Target Seats vs. Realized Value:</strong><br>
+                        Compares a Party's total targeted flips (X-axis) against the realistic number of seats that would flip under each environment:</p>
                     <ul class="methodology-list">
-                        <li><strong>Standard Contest:</strong> Signed two-party margin:
-                            <code>(Dem - Rep) / (Dem + Rep)</code>[cite: 2].
-                        </li>
-                        <li><strong>Top-Two / Jungle Primaries (CA & WA):</strong> In general contests between members
-                            of the same party (D vs D or R vs R), we aggregate all Democratic vs. Republican votes cast
-                            during the all-party primary stage as the benchmark[cite: 2].</li>
-                        <li><strong>Unopposed / Uncontested:</strong> When a major party fielded no candidate, the 2024
-                            Presidential Margin is imputed as the true partisan floor[cite: 2]. Non-standard races are
-                            flagged with an asterisk (<code>*</code>)[cite: 2].</li>
+                        <li><strong>Full Realization (EV ≈ Target):</strong> Redistrict efforts successfully flip all intended seats. Only California is expected to do so for 2026. In a neutral environment, one of California's targets is not a lock, and Texas and Florida are still unlikely to reach their targets.</li>
+                        <li><strong>Dummymander:</strong> The case in which the gerrymandering Party ends up losing districts due to diluting their own districts too much. The only plausible application of this scenario this cycle is TX-34, which was slightly diluted (shifted 0.75% towards Harris).</li>
                     </ul>
+
+                    <p style="margin-top: 14px;"><strong>3. Non-Standard General Elections:</strong><br>
+                        For uncontested races or CA top-two intra-party runoffs (D vs D or R vs R), 2024 presidential results serve as the baseline partisan floor to prevent distortion.</p>
                 </div>
 
-                <!-- National Overview Topline Stats -->
-                <div class="methodology-card">
-                    <h3>Impact on Targeted Districts</h3>
-                    <p>Definitions for the topline metrics in the default sidebar overview[cite: 2]:</p>
-                    <ul class="methodology-list">
-                        <li><strong>Mean Partisan Shift:</strong> The absolute average shift
-                            (<code>|Margin Shift|</code>) across all targeted boundaries, measuring the raw magnitude of
-                            the cartographic changes[cite: 2].</li>
-                        <li><strong>Median Partisan Lean:</strong> The median partisan lean of all targeted seats,
-                            indicating the center of gravity of the redrawn maps[cite: 2].</li>
-                        <li><strong>Mean Partisan Shift (Net):</strong> The directional signed mean
-                            (<code>Σ Margin Shift / N</code>), revealing which party captured net territory
-                            overall[cite: 2].</li>
-                        <li><strong>Median New District:</strong> The exact median seat when sorting all altered
-                            districts by post-redistricting presidential margin[cite: 2].</li>
-                    </ul>
-                </div>
+            </div>
 
-                <!-- Tipping Point & Generic Ballot Bias -->
-                <div class="methodology-card">
-                    <h3>Tipping Point & Seat Advantage</h3>
-                    <p>Calculates chamber-control thresholds and spatial seat bias across the 435 U.S. House seats[cite:
-                        2]:</p>
-                    <ul class="methodology-list">
-                        <li><strong>Tipping Point District:</strong> The 218th seat when ranking all 435 congressional
-                            districts from most Democratic to most Republican[cite: 2]. If a party wins the tipping
-                            point seat, they secure the House majority[cite: 2].</li>
-                        <li><strong>Generic Ballot Advantage (Seat Bias):</strong> Measures systemic cartographic tilt
-                            by subtracting the national popular vote share from the majority party's projected seat
-                            share[cite: 2]:
-                            <div class="methodology-formula">
-                                Advantage = (Seats Won / 435) - National 2-Party Vote Share
-                            </div>
-                        </li>
-                    </ul>
+            <!-- Bottom Tier: Consolidated Sidebar Metrics Overview -->
+            <div class="methodology-card" style="margin-top: 24px;">
+                <h3>Sidebar Metrics</h3>
+                <p>Summary of definitions for the default overview and dynamic district-level metrics.</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 12px;">
+                    <div>
+                        <p style="margin: 0 0 4px 0;"><strong>Mean Partisan Shift</strong></p>
+                        <p style="font-size: 0.88rem; margin: 0; color: #64748b;">The magnitude of partisan shift towards the gerrymandering Party, (<code>mean(|Shift|)</code>). For example, Louisiana's 6th district shifted from Harris+15.0 to Trump+31.8, a magnitude shift of 41.8 towards the right.</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0 0 4px 0;"><strong>Median Partisan Lean</strong></p>
+                        <p style="font-size: 0.88rem; margin: 0; color: #64748b;">The median partisan lean across all targeted districts. The average new district targeted to flip is voted for either Trump or Harris by 11.6%.</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0 0 4px 0;"><strong>Net Partisan Shift</strong></p>
+                        <p style="font-size: 0.88rem; margin: 0; color: #64748b;">The net partisan shift across all targeted districts, (<code>Σ Shift / N</code>). Because there's far more GOP-led gerrymanders than Dem-led ones, the average targeted district shifted 11.7% towards Trump.</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0 0 4px 0;"><strong>Median District</strong></p>
+                        <p style="font-size: 0.88rem; margin: 0; color: #64748b;">The middle seat of targeted districts when sorting the new districts by their post-redistricting 2024 presidential margin.</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0 0 4px 0;"><strong>Tipping Point Seat</strong></p>
+                        <p style="font-size: 0.88rem; margin: 0; color: #64748b;">The seat that determines control of the House: the 218th seat when ranking all 435 national districts from most Democratic to most Republican. Due to gerrymandering this cycle, the GOP would have gained an additional 1.9% popular vote advantage for House control under the 2024 environment.</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0 0 4px 0;"><strong>Generic Ballot Advantage</strong></p>
+                        <p style="font-size: 0.88rem; margin: 0; color: #64748b;">Measures structural seat bias: <code>(Seats Won / 435) - National Popular Vote Share</code>. On average, the GOP maintains a 2.79% popular vote advantage for the 2026 midterm House elections.</p>
+                    </div>
                 </div>
-
             </div>
         </section>
 
@@ -189,20 +194,14 @@
     <div id="master-footer-wrapper">
         <div class="footer-column">
             <h4>Data Sources</h4>
-            <p>Data and geometry of 2026 districts sourced from Dave's Redistricting (<a
-                    href="https://davesredistricting.org" target="_blank">davesredistricting.org</a>). 2024 election
-                results sourced from MIT Election Lab (<a href="https://electionlab.mit.edu"
-                    target="_blank">electionlab.mit.edu</a>).</p>
+            <p>Data and geometry of 2026 districts sourced from Dave's Redistricting (<a href="https://davesredistricting.org" target="_blank">davesredistricting.org</a>). 2024 election results sourced from MIT Election Lab (<a href="https://electionlab.mit.edu" target="_blank">electionlab.mit.edu</a>).</p>
         </div>
         <div class="footer-column">
             <h4>Licensing & Usage</h4>
-            <p>Code released under the <a href="https://opensource.org" target="_blank">MIT License</a>. Map
-                visualizations and calculated data products are licensed under <a href="https://creativecommons.org"
-                    target="_blank">CC BY 4.0</a>.</p>
+            <p>Code released under the <a href="https://opensource.org" target="_blank">MIT License</a>. Map visualizations and calculated data products are licensed under <a href="https://creativecommons.org" target="_blank">CC BY 4.0</a>.</p>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 Xin "Ryan" Gao &bull; <a href="https://github.com/rgao/redistricting_tracker"
-                    target="_blank">View Repository on GitHub</a></p>
+            <p>&copy; 2026 Xin "Ryan" Gao &bull; <a href="https://github.com/rgao/redistricting_tracker" target="_blank">View Repository on GitHub</a></p>
         </div>
     </div>
 

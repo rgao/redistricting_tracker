@@ -5,6 +5,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // =========================================================================
     const chartContainer = document.getElementById("gerrymander-chart");
     if (chartContainer) {
+        // State Elasticity: Measures how responsive a state's electorate is to national partisan swings.
+        // Polarized, racially polarized states (like MS, AL) move sluggishly (< 0.85),
+        // while highly elastic swing states (like NH, NV, WI) swing aggressively with national wave winds (> 1.05).
         const STATE_ELASTICITY = {
             "AL": 0.81, "MS": 0.79, "GA": 0.84, "SC": 0.88, "MD": 0.87,
             "LA": 0.93, "NC": 0.94, "VA": 0.92, "NY": 0.96, "CA": 0.96,
@@ -29,6 +32,9 @@ document.addEventListener("DOMContentLoaded", function () {
             "WISCONSIN": "WI", "WYOMING": "WY"
         };
 
+        // Standardizes irregular incoming district strings into a uniform "ST-##" identifier.
+        // Handles unhyphenated codes ("CA22" -> "CA-22"), unpadded numbers ("FL-3" -> "FL-03"),
+        // and strips dirty asterisk tags from long-form text (e.g. "Alabama 2nd District *").
         function formatDistrictCode(rawCode, rawName) {
             if (typeof rawCode === "string" && rawCode.length === 4 && !rawCode.includes("-")) {
                 return `${rawCode.slice(0, 2)}-${rawCode.slice(2)}`;
@@ -49,6 +55,8 @@ document.addEventListener("DOMContentLoaded", function () {
             return rawCode || "UNK";
         }
 
+        // Converts human-readable partisan lean strings ("D+4.5", "R+11.2", "EVEN")
+        // into signed floating-point numbers (+ for Dem advantage, - for GOP advantage).
         function parsePartisanIndex(str) {
             if (!str || str === "EVEN") return 0.0;
             const clean = String(str).replace(/\s+/g, "").toUpperCase();
@@ -58,17 +66,20 @@ document.addEventListener("DOMContentLoaded", function () {
             return isNaN(num) ? 0.0 : num;
         }
 
+        // Detects non-standard general elections (e.g., California same-party top-two runoffs,
+        // unopposed third-party challenges) where the House margin needs presidential imputation.
         function isNonStandardRace(raceType) {
             if (!raceType) return false;
             const rt = String(raceType).toLowerCase();
             return !(rt.includes("standard") && !rt.includes("non-standard"));
         }
 
+        // Color coding scale for our Gerrymander Effectiveness Score
         function getScoreColor(val) {
-            if (val >= 50) return "#10b981";
-            if (val >= 0) return "#f59e0b";
-            if (val >= -50) return "#f97316";
-            return "#ef4444";
+            if (val >= 65) return "#10b981"; // Safe gerrymander payoff
+            if (val >= 50) return "#f59e0b"; // Marginal flip
+            if (val >= 35) return "#f97316"; // Endangered flip
+            return "#ef4444";                 // High-risk dummymander
         }
 
         const candidatePaths = [
@@ -89,8 +100,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     loadGeoJSON(pathIndex + 1);
                     return;
                 }
-                renderGerrymanderChart(geojson);
-                renderStateChart();
+                const districtData = renderGerrymanderChart(geojson);
+                renderStateChart(districtData);
             }).catch(function () {
                 loadGeoJSON(pathIndex + 1);
             });
@@ -99,6 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
         loadGeoJSON(0);
 
         function renderGerrymanderChart(geojson) {
+            // Isolate only the explicit flip targets engineered by mapmakers
             const targetedFeatures = geojson.features.filter(f => {
                 const t = f.properties && f.properties.Targeted;
                 return t === true || t === "True" || t === 1;
@@ -106,9 +118,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (targetedFeatures.length === 0) {
                 chartContainer.innerHTML = `<p style="padding:24px;text-align:center;color:#64748b;">No districts flagged with Targeted=True.</p>`;
-                return;
+                return [];
             }
 
+            // Core modeling function: reads properties straight from the Python ETL pipeline (the single source of truth)
+            // and computes flip probabilities across both wave (2026) and neutral baseline environments.
             function calculateMetrics(feature) {
                 const props = feature.properties || {};
                 const id = formatDistrictCode(props.District, props.District_Name);
@@ -120,43 +134,69 @@ document.addEventListener("DOMContentLoaded", function () {
                 const raceType = props.House_Race_Type || "Standard Contest";
                 const nonStandard = isNonStandardRace(raceType);
 
+                // Ingesting the Python ETL values directly — avoiding brittle frontend hardcoded exceptions
+                const currentRep = props.Current_Rep || props.House_Winner || "N/A";
+                const repParty = props.House_Party || "OTHER";
+                const isIncumbentRunning = props.Incumbent_Running === true || props.Incumbent_Running === "True";
+
                 let base2024 = 0.0;
                 if (nonStandard) {
                     base2024 = (parseFloat(props["Margin 24"]) || 0.0) * 100;
                 } else {
                     const mov = (parseFloat(props.House_MOV_Raw) || 0.0) * 100;
-                    const winnerParty = String(props.House_Party || "").toUpperCase();
+                    const winnerParty = String(repParty || "").toUpperCase();
                     base2024 = winnerParty.startsWith("D") ? mov : -mov;
                 }
 
                 const signedShift = partisanIndex - base2024;
                 const absShift = Math.abs(signedShift);
 
-                const sigma = 3.9;
                 const beta_env = STATE_ELASTICITY[statePostal] || 0.95;
 
-                const env2026 = 8.0;
-                const mu2026 = partisanIndex + (beta_env * env2026);
+                // Incumbency Advantage: Sitting representatives get a +3.0 margin boost only if they are actively running.
+                // Open/retiring seats (like FL-22 where Frankel shifted to FL-23) get 0.0.
+                let incumbencyOffset = 0.0;
+                if (isIncumbentRunning && repParty) {
+                    const rp = String(repParty).toUpperCase();
+                    if (rp.startsWith("D")) incumbencyOffset = 3.0;
+                    else if (rp.startsWith("R")) incumbencyOffset = -3.0;
+                }
+
+                const env2026 = 8.0; // D+8.0 national environment benchmark
+                const sigma = 5.5;   // Historical standard deviation of congressional district variance
+
+                // Logistic Probability: P = 1 / (1 + e^(-mu / sigma))
+                // Scenario 1: 2026 Midterm wave environment
+                const mu2026 = partisanIndex + (beta_env * env2026) + incumbencyOffset;
                 const pDem2026 = 1 / (1 + Math.exp(-mu2026 / sigma));
                 const pIntended2026 = party === "DEM" ? pDem2026 : (1 - pDem2026);
-                const score2026 = 200 * (pIntended2026 - 0.50);
 
-                const muNeutral = partisanIndex;
+                // Scenario 2: Neutral political environment
+                const muNeutral = partisanIndex + incumbencyOffset;
                 const pDemNeutral = 1 / (1 + Math.exp(-muNeutral / sigma));
                 const pIntendedNeutral = party === "DEM" ? pDemNeutral : (1 - pDemNeutral);
-                const scoreNeutral = 200 * (pIntendedNeutral - 0.50);
+
+                // Effectiveness score: blended average probability of success across both wave and neutral scenarios
+                const staticEffectivenessScore = Math.round(((pIntended2026 + pIntendedNeutral) / 2) * 100);
+
+                const yPos2026 = pIntended2026 * 100;
+                const yPosNeutral = pIntendedNeutral * 100;
 
                 return {
                     id,
+                    statePostal,
                     party,
-                    currentRep: props.Current_Rep || props.House_Winner || "N/A",
-                    repParty: props.House_Party || "OTHER",
+                    currentRep,
+                    repParty,
                     betaEnv: beta_env,
                     partisanIndex: parseFloat(partisanIndex.toFixed(1)),
                     signedShift: parseFloat(signedShift.toFixed(2)),
                     absShift: parseFloat(absShift.toFixed(2)),
-                    score2026: parseFloat(score2026.toFixed(1)),
-                    scoreNeutral: parseFloat(scoreNeutral.toFixed(1)),
+                    yPos2026: parseFloat(yPos2026.toFixed(1)),
+                    yPosNeutral: parseFloat(yPosNeutral.toFixed(1)),
+                    staticScore: staticEffectivenessScore,
+                    rawPIntended2026: pIntended2026,
+                    rawPIntendedNeutral: pIntendedNeutral,
                     p2026: (pIntended2026 * 100).toFixed(1),
                     pNeutral: (pIntendedNeutral * 100).toFixed(1)
                 };
@@ -179,27 +219,28 @@ document.addEventListener("DOMContentLoaded", function () {
             const xDomainLimit = Math.max(30, Math.ceil(maxLean / 5) * 5);
 
             const xScale = d3.scaleLinear().domain([-xDomainLimit, xDomainLimit]).range([0, width]);
-            const yScale = d3.scaleLinear().domain([-100, 100]).range([height, 0]);
+            const yScale = d3.scaleLinear().domain([0, 100]).range([height, 0]);
 
+            // Circle radius encodes the absolute magnitude of the line shift
             const maxShiftVal = d3.max(data, d => d.absShift) || 40;
             const maxR = 24;
             const rScale = d3.scaleSqrt().domain([0, maxShiftVal]).range([0, maxR]);
 
-            svg.append("g").attr("class", "chart-grid-line").call(d3.axisLeft(yScale).ticks(8).tickSize(-width).tickFormat(""));
+            svg.append("g").attr("class", "chart-grid-line").call(d3.axisLeft(yScale).ticks(5).tickSize(-width).tickFormat(""));
             svg.append("line").attr("class", "chart-center-divider").attr("x1", xScale(0)).attr("x2", xScale(0)).attr("y1", 0).attr("y2", height);
-            svg.append("line").attr("class", "chart-zero-line").attr("x1", 0).attr("x2", width).attr("y1", yScale(0)).attr("y2", yScale(0));
+            svg.append("line").attr("class", "chart-zero-line").attr("x1", 0).attr("x2", width).attr("y1", yScale(50)).attr("y2", yScale(50));
 
-            svg.append("text").attr("class", "chart-threshold-label").attr("x", width - 8).attr("y", yScale(0) - 8).text("50% Toss-Up / Break-Even Threshold");
+            svg.append("text").attr("class", "chart-threshold-label").attr("x", width - 8).attr("y", yScale(50) - 8).text("50/50 Toss-Up");
 
             const xAxis = d3.axisBottom(xScale).ticks(12).tickFormat(d => d === 0 ? "EVEN" : (d < 0 ? `D+${Math.abs(d)}` : `R+${d}`));
             svg.append("g").attr("class", "chart-axis").attr("transform", `translate(0,${height})`).call(xAxis);
-            svg.append("g").attr("class", "chart-axis").call(d3.axisLeft(yScale).ticks(8).tickFormat(d => d > 0 ? `+${d}` : d));
+            svg.append("g").attr("class", "chart-axis").call(d3.axisLeft(yScale).ticks(5).tickFormat(d => `${d}%`));
 
-            svg.append("text").attr("class", "chart-axis-label y-axis-title").attr("transform", "rotate(-90)").attr("x", -height / 2).attr("y", -45).text("Effectiveness Score* (100 = Successful Flip, -100 = Likely Fail)");
+            svg.append("text").attr("class", "chart-axis-label y-axis-title").attr("transform", "rotate(-90)").attr("x", -height / 2).attr("y", -45).text("Likelihood of Seat Flip (%)");
             svg.append("text").attr("class", "chart-axis-label dem-label").attr("x", width / 4).attr("y", height + 46).text("← Dem-Favored Districts (Partisan Index)");
             svg.append("text").attr("class", "chart-axis-label rep-label").attr("x", (3 * width) / 4).attr("y", height + 46).text("GOP-Favored Districts (Partisan Index) →");
 
-            const legCenterY = yScale(-90);
+            const legCenterY = yScale(10);
             const legBoxWidth = 275;
             const legBoxHeight = 32;
 
@@ -208,12 +249,14 @@ document.addEventListener("DOMContentLoaded", function () {
             legendCard.append("circle").attr("cx", 18).attr("cy", legBoxHeight / 2).attr("r", 8).attr("fill", "#0f172a").attr("fill-opacity", 0.08).attr("stroke", "#0f172a").attr("stroke-width", 2).attr("stroke-dasharray", "3, 2");
             legendCard.append("text").attr("x", 34).attr("y", (legBoxHeight / 2) + 4).attr("font-size", "10.5px").attr("font-weight", "800").attr("fill", "#0f172a").text("Size of Shift in Partisan Lean from 2024 to 2026");
 
-            svg.append("text").attr("x", width - 4).attr("y", yScale(-90) + 4).attr("text-anchor", "end").attr("font-size", "11px").attr("font-weight", "600").attr("fill", "#64748b").text("* Explained in methodology section");
+            svg.append("text").attr("x", width - 4).attr("y", yScale(10) + 4).attr("text-anchor", "end").attr("font-size", "11px").attr("font-weight", "600").attr("fill", "#64748b").text("* Explained in methodology section");
 
             const tooltip = d3.select("#chart-tooltip");
-            function getActiveY(d, mode) { return mode === "neutral" ? d.scoreNeutral : d.score2026; }
+            function getActiveY(d, mode) { return mode === "neutral" ? d.yPosNeutral : d.yPos2026; }
             let currentMode = "2026";
 
+            // Vertical label fanning algorithm: avoids messy diagonal floating by strictly locking labels to their
+            // district's vertical X-axis and stepping straight up or down until they find open canvas space.
             function computePositions(mode) {
                 const nodes = data.map(d => {
                     const cx = xScale(d.party === "DEM" ? -Math.abs(d.partisanIndex) : Math.abs(d.partisanIndex));
@@ -222,14 +265,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     return { d, cx, cy, r };
                 });
 
-                // Sort left-to-right for consistent processing order
-                nodes.sort((a, b) => a.cx - b.cx);
+                // Prioritize larger circles so major district shifts claim the cleanest label positions first
+                nodes.sort((a, b) => b.r - a.r || a.cx - b.cx);
 
                 const labelW = 56;
                 const labelH = 16;
                 const placedLabels = [];
 
-                // Strict box-to-circle collision check
                 function boxCollidesWithCircles(x, y) {
                     const l = x - labelW / 2 - 4;
                     const r_box = x + labelW / 2 + 4;
@@ -241,14 +283,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         const closestY = Math.max(t, Math.min(node.cy, b));
                         const distX = node.cx - closestX;
                         const distY = node.cy - closestY;
-                        if ((distX * distX + distY * distY) < (node.r + 6) ** 2) {
+                        if ((distX * distX + distY * distY) < (node.r + 7) ** 2) {
                             return true;
                         }
                     }
                     return false;
                 }
 
-                // Strict rectangular bounding box (AABB) intersection check for text labels
                 function boxCollidesWithLabels(x, y) {
                     const l1 = x - labelW / 2;
                     const r1 = x + labelW / 2;
@@ -261,7 +302,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         const t2 = p.y - labelH / 2;
                         const b2 = p.y + labelH / 2;
 
-                        // Check for overlap with padding buffer
                         if (l1 < r2 + 6 && r1 > l2 - 6 && t1 < b2 + 4 && b1 > t2 - 4) {
                             return true;
                         }
@@ -269,7 +309,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     return false;
                 }
 
-                return nodes.map(node => {
+                const placedResults = nodes.map(node => {
                     const cx = node.cx;
                     const cy = node.cy;
                     const r = node.r;
@@ -277,12 +317,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     let bestY = cy - r - 18;
                     let found = false;
 
-                    // Fine-grained vertical steps covering the entire Y-axis space as needed
                     const verticalSteps = [
-                        18, 24, 30, 36, 42, 48, 54, 62, 70, 80, 90, 102, 114, 128, 144, 162, 182, 204
+                        18, 26, 34, 44, 54, 66, 78, 92, 108, 126, 146, 168, 192, 220
                     ];
 
-                    // 1. Try strictly above first, stretching upward
+                    // Ladder upward first
                     for (let offset of verticalSteps) {
                         let ty = cy - r - offset;
                         if (ty >= 20 && !boxCollidesWithCircles(cx, ty) && !boxCollidesWithLabels(cx, ty)) {
@@ -292,7 +331,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     }
 
-                    // 2. If above is blocked, try strictly beneath, stretching downward
+                    // If blocked upward, search downward
                     if (!found) {
                         for (let offset of verticalSteps) {
                             let ty = cy + r + offset;
@@ -304,7 +343,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     }
 
-                    // Ultimate fallback
                     if (!found) {
                         bestY = Math.max(20, Math.min(height - 16, cy - r - 220));
                     }
@@ -313,6 +351,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     placedLabels.push(placed);
                     return placed;
                 });
+
+                return data.map(d => placedResults.find(p => p.d.id === d.id));
             }
 
             let positions = computePositions(currentMode);
@@ -336,12 +376,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 .on("mouseover", function (event, pos) {
                     d3.select(this).raise();
                     const d = pos.d;
-                    const score = getActiveY(d, currentMode);
-                    const scoreColor = getScoreColor(score);
                     const pColorClass = d.party === "DEM" ? "dem-text" : "rep-text";
                     const pIndexDisplay = d.partisanIndex > 0 ? `D+${d.partisanIndex}` : (d.partisanIndex < 0 ? `R+${Math.abs(d.partisanIndex)}` : "EVEN");
                     const shiftColorClass = d.signedShift >= 0 ? "dem-text" : "rep-text";
-                    // 1-decimal formatting
                     const shiftDisplay = d.signedShift >= 0 ? `D +${d.signedShift.toFixed(1)}%` : `R +${Math.abs(d.signedShift).toFixed(1)}%`;
                     const repPartyClass = String(d.repParty).toUpperCase().startsWith("D") ? "dem-text" : (String(d.repParty).toUpperCase().startsWith("R") ? "rep-text" : "");
 
@@ -355,7 +392,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             <div class="tt-row"><span>2026 Flip Prob:</span> <strong>${d.p2026}%</strong></div>
                             <div class="tt-row"><span>Neutral Flip Prob:</span> <strong>${d.pNeutral}%</strong></div>
                             <div class="tt-divider"></div>
-                            <div class="tt-row"><span>Effectiveness Score*:</span> <strong style="color: ${scoreColor} !important; font-size: 1.05rem; font-weight: 900;">${score > 0 ? "+" + score : score}</strong></div>
+                            <div class="tt-row">
+                                <span>Effectiveness Score*:</span>
+                                <strong style="color: ${getScoreColor(d.staticScore)} !important; font-size: 1.05rem; font-weight: 800;">
+                                    ${d.staticScore}
+                                </strong>
+                            </div>
                         `);
 
                     const containerNode = document.getElementById("gerrymander-chart");
@@ -400,26 +442,46 @@ document.addEventListener("DOMContentLoaded", function () {
                     .transition().duration(650).ease(d3.easeCubicInOut)
                     .attr("x1", d => d.cx).attr("y1", d => d.cy).attr("x2", d => d.x).attr("y2", d => d.y);
             };
+
+            return data;
         }
     }
 
     // =========================================================================
     // 2. STATE-LEVEL DELEGATION CHANGES (CHART 2)
     // =========================================================================
-    function renderStateChart() {
+    function renderStateChart(districtData) {
         const stateChartContainer = document.getElementById("state-delegation-chart");
         if (!stateChartContainer) return;
 
-        const stateDelegationData = [
-            { state: "California", abbr: "CA", party: "DEM", targeted: 5, ev2026: 4.75, evNeutral: 4.15, preDem: 43, preRep: 9, totalSeats: 52, targetDem: 48, targetRep: 4 },
-            { state: "Texas", abbr: "TX", party: "REP", targeted: 5, ev2026: 3.10, evNeutral: 3.87, preDem: 13, preRep: 25, totalSeats: 38, targetDem: 8, targetRep: 30 },
-            { state: "Florida", abbr: "FL", party: "REP", targeted: 4, ev2026: 2.85, evNeutral: 3.60, preDem: 8, preRep: 20, totalSeats: 28, targetDem: 4, targetRep: 24 },
-            { state: "Ohio", abbr: "OH", party: "REP", targeted: 2, ev2026: 1.25, evNeutral: 1.75, preDem: 5, preRep: 10, totalSeats: 15, targetDem: 3, targetRep: 12 },
-            { state: "North Carolina", abbr: "NC", party: "REP", targeted: 1, ev2026: 0.30, evNeutral: 0.42, preDem: 4, preRep: 10, totalSeats: 14, targetDem: 3, targetRep: 11 },
-            { state: "Tennessee", abbr: "TN", party: "REP", targeted: 1, ev2026: 0.95, evNeutral: 0.98, preDem: 1, preRep: 8, totalSeats: 9, targetDem: 0, targetRep: 9 },
-            { state: "Alabama", abbr: "AL", party: "REP", targeted: 1, ev2026: 0.88, evNeutral: 0.95, preDem: 2, preRep: 5, totalSeats: 7, targetDem: 1, targetRep: 6 },
-            { state: "Louisiana", abbr: "LA", party: "REP", targeted: 1, ev2026: 0.85, evNeutral: 0.92, preDem: 2, preRep: 4, totalSeats: 6, targetDem: 1, targetRep: 5 }
+        const baseStateConfig = [
+            { state: "California", abbr: "CA", party: "DEM", preDem: 43, preRep: 9, totalSeats: 52, targetDem: 48, targetRep: 4 },
+            { state: "Texas", abbr: "TX", party: "REP", preDem: 13, preRep: 25, totalSeats: 38, targetDem: 8, targetRep: 30 },
+            { state: "Florida", abbr: "FL", party: "REP", preDem: 8, preRep: 20, totalSeats: 28, targetDem: 4, targetRep: 24 },
+            { state: "Ohio", abbr: "OH", party: "REP", preDem: 5, preRep: 10, totalSeats: 15, targetDem: 3, targetRep: 12 },
+            { state: "North Carolina", abbr: "NC", party: "REP", preDem: 4, preRep: 10, totalSeats: 14, targetDem: 3, targetRep: 11 },
+            { state: "Tennessee", abbr: "TN", party: "REP", preDem: 1, preRep: 8, totalSeats: 9, targetDem: 0, targetRep: 9 },
+            { state: "Alabama", abbr: "AL", party: "REP", preDem: 2, preRep: 5, totalSeats: 7, targetDem: 1, targetRep: 6 },
+            { state: "Louisiana", abbr: "LA", party: "REP", preDem: 2, preRep: 4, totalSeats: 6, targetDem: 1, targetRep: 5 }
         ];
+
+        // Sum up the individual district probabilities to determine total expected net delegation seat gain per state
+        const stateDelegationData = baseStateConfig.map(st => {
+            const matchedDistricts = Array.isArray(districtData)
+                ? districtData.filter(d => d.statePostal === st.abbr)
+                : [];
+
+            const targeted = matchedDistricts.length;
+            const ev2026 = d3.sum(matchedDistricts, d => d.rawPIntended2026 || 0);
+            const evNeutral = d3.sum(matchedDistricts, d => d.rawPIntendedNeutral || 0);
+
+            return {
+                ...st,
+                targeted: targeted > 0 ? targeted : 1,
+                ev2026: parseFloat(ev2026.toFixed(2)),
+                evNeutral: parseFloat(evNeutral.toFixed(2))
+            };
+        });
 
         stateChartContainer.innerHTML = "";
         const margin = { top: 45, right: 65, bottom: 65, left: 65 };
@@ -433,7 +495,6 @@ document.addEventListener("DOMContentLoaded", function () {
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
         const xScale = d3.scaleLinear().domain([-6, 6]).range([0, width]);
-        // Negative Y-axis ending at -0.5 (half-row buffer)[cite: 18, 23]
         const yScale = d3.scaleLinear().domain([-0.5, 5.5]).range([height, 0]);
 
         svg.append("g").attr("class", "chart-grid-line").call(d3.axisLeft(yScale).ticks(7).tickSize(-width).tickFormat(""));
@@ -479,7 +540,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function getEV(d, mode) { return mode === "neutral" ? d.evNeutral : d.ev2026; }
 
-        // Clean vertical fanning for the cluster of states sharing x = 1[cite: 31]
+        // Chart 2 layout: Tennessee, Louisiana, and Alabama share the exact same X coordinate (x=1).
+        // To prevent collision, we fan their labels out to the left using dashed leader lines with balanced spacing.
         function getPositions(mode) {
             return stateDelegationData.map(d => {
                 const cx = xScale(d.party === "DEM" ? -d.targeted : d.targeted);
@@ -487,6 +549,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const r = 16;
                 let lx = cx, ly = cy, anchor = "middle";
 
+                // Lone states with distinct X positions get top/bottom placements
                 if (d.abbr === "CA") {
                     lx = cx; ly = cy - r - 8; anchor = "middle";
                 } else if (d.abbr === "TX") {
@@ -494,19 +557,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else if (d.abbr === "FL") {
                     lx = cx; ly = cy + r + 14; anchor = "middle";
                 } else if (d.abbr === "OH") {
-                    lx = cx + r + 14; ly = cy + 4; anchor = "start";
-                } else if (d.abbr === "TN") {
-                    // Top in stack: up-left diagonal
-                    lx = cx - 42; ly = cy - 26; anchor = "end";
-                } else if (d.abbr === "LA") {
-                    // Middle in stack: directly horizontal to the left
-                    lx = cx - 42; ly = cy - 2; anchor = "end";
-                } else if (d.abbr === "AL") {
-                    // Bottom in stack: down-left diagonal
-                    lx = cx - 42; ly = cy + 22; anchor = "end";
+                    lx = cx; ly = cy - r - 8; anchor = "middle";
                 } else if (d.abbr === "NC") {
-                    // North Carolina sits cleanly on the right
-                    lx = cx + 38; ly = cy + 4; anchor = "start";
+                    lx = cx; ly = cy + r + 14; anchor = "middle";
+                } 
+                // The 1-target cluster (x = 1): Fanned out horizontally to the left
+                else if (d.abbr === "TN") {
+                    lx = cx - 48; ly = cy - 36; anchor = "end";
+                } else if (d.abbr === "LA") {
+                    lx = cx - 48; ly = cy - 4; anchor = "end";
+                } else if (d.abbr === "AL") {
+                    // Positioned at +18 to sit comfortably above North Carolina and the dashed zero-line
+                    lx = cx - 48; ly = cy + 18; anchor = "end";
                 }
 
                 return { d, cx, cy, r, lx, ly, anchor };
@@ -568,6 +630,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .on("mouseout", function () { tooltip.classed("visible", false); });
 
+        // Invisible wider stroke line behind the leader line so users don't trigger mouseout when crossing leader lines
         stateNodes.append("line")
             .attr("class", "leader-hover-buffer")
             .attr("stroke", "transparent")
@@ -618,6 +681,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // =========================================================================
     // 3. MASTER SCENARIO TOGGLE CONTROLLER
     // =========================================================================
+    // Coordinates button clicks to transition both charts between Wave (2026) and Neutral scenarios
     document.querySelectorAll(".scenario-btn").forEach(btn => {
         btn.addEventListener("click", function (e) {
             e.preventDefault();
