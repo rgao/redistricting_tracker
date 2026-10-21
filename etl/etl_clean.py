@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import os
@@ -48,7 +48,7 @@ states_gdf = pd.concat(all_gdfs, ignore_index=True)
 states_gdf.head(8)
 
 
-# In[ ]:
+# In[2]:
 
 
 # Load 2024 presidential totals from old boundaries
@@ -59,7 +59,7 @@ merged_gdf = states_gdf.merge(pres24, on='District', how='inner')
 merged_gdf.head(8)
 
 
-# In[ ]:
+# In[3]:
 
 
 # Rename columns to standard analytical schema
@@ -73,7 +73,6 @@ gdf_clean = merged_gdf.rename(columns={
     'Total': 'Total 24 Raw'
 })
 
-# Calculate two-party presidential vote shares and margin shift
 gdf_clean['Harris 24'] = gdf_clean['Harris 24 Raw'] / gdf_clean['Total 24 Raw']
 gdf_clean['Trump 24'] = gdf_clean['Trump 24 Raw'] / gdf_clean['Total 24 Raw']
 
@@ -81,10 +80,11 @@ gdf_clean['Margin 24'] = gdf_clean['Harris 24'] - gdf_clean['Trump 24']
 gdf_clean['Margin New'] = gdf_clean['Harris New'] - gdf_clean['Trump New']
 gdf_clean['Margin Shift'] = gdf_clean['Margin New'] - gdf_clean['Margin 24']
 
-gdf_clean.head()
+# Remove rounding noise (< 0.10% shift)
+gdf_clean.loc[gdf_clean['Margin Shift'].abs() < 0.001, 'Margin Shift'] = 0.0
 
 
-# In[ ]:
+# In[4]:
 
 
 # Ingest re-tabulated 2020 presidential returns for redrawn maps
@@ -132,7 +132,7 @@ gdf_clean['Margin 20'] = gdf_clean['Margin 20'].fillna(gdf_clean['Margin New'])
 gdf_clean.head()
 
 
-# In[ ]:
+# In[5]:
 
 
 # Load 2024 House summary attributes
@@ -187,7 +187,7 @@ if os.path.exists(house_path):
     
     gdf_clean = gdf_clean.merge(house_df[merge_cols], on='District', how='left')
 
-# National two-party presidential baseline shifts
+# National presidential vote
 NATL_MARGIN_2020 = 0.0445
 NATL_MARGIN_2024 = -0.0147
 
@@ -210,64 +210,183 @@ gdf_clean['Partisan_Lean_Index'] = gdf_clean['Partisan Index'].apply(format_lean
 gdf_clean.head()
 
 
-# In[ ]:
+# In[6]:
 
 
-# Flag districts targeted for redistricting
+# Flag targeted flip seats
 gdf_clean["Targeted"] = (gdf_clean["Margin New"] * gdf_clean["Margin 24"]) < 0
 gdf_clean["Targeted"] = gdf_clean["Targeted"].astype(bool)
 
-# Manual removals - false flags
+# Specific manual overrides for targeted seats
 targeted_removals = ["CA09", "CA13", "FL13"]
 gdf_clean.loc[gdf_clean["District"].isin(targeted_removals), "Targeted"] = False
 
-# Manual additions - missed flags
 targeted_additions = ["NC01", "OH09", "TX28", "TX34", "CA22"]
 gdf_clean.loc[gdf_clean["District"].isin(targeted_additions), "Targeted"] = True
 
-# Which Party the new district favors
 gdf_clean["Target_Party"] = None
-
 mask_targeted = gdf_clean["Targeted"] == True
 gdf_clean.loc[mask_targeted, "Target_Party"] = gdf_clean.loc[mask_targeted, "Margin Shift"].apply(
     lambda s: "DEM" if s > 0 else "GOP"
 )
-
 gdf_clean.loc[gdf_clean["District"] == "CA22", "Target_Party"] = "DEM"
 
+# =========================================================================
+# SYSTEMATIC DILUTED / DONOR SEAT FLAG (FILTERING OUT NOISE)
+# =========================================================================
+# Rules:
+# 1. Must shift > 0.5% towards opposition:
+#    - For CA (Dem map): Margin Shift < -0.005 (shifting rightward)
+#    - For GOP states: Margin Shift > +0.005 (shifting leftward)
+# 2. Must be genuinely exposed: Absolute Partisan Index < 20.0% (|Partisan Index| < 0.20)
+# 3. Exclude targeted flip seats
+gdf_clean["State_Postal"] = gdf_clean["District"].str[:2].str.upper()
+
+cond_ca_diluted = (
+    (gdf_clean["State_Postal"] == "CA") & 
+    (gdf_clean["Margin Shift"] < -0.005) & 
+    (gdf_clean["Partisan Index"].abs() < 0.20)
+)
+
+cond_gop_diluted = (
+    (gdf_clean["State_Postal"] != "CA") & 
+    (gdf_clean["Margin Shift"] > 0.005) & 
+    (gdf_clean["Partisan Index"].abs() < 0.20)
+)
+
+gdf_clean["Diluted"] = cond_ca_diluted | cond_gop_diluted
+gdf_clean.loc[gdf_clean["Targeted"] == True, "Diluted"] = False
+
+# Open seat / Retirement tracking
+retiring_districts = ["CA11", "CA26", "CA48", "FL11", "FL22", "FL16", "FL24", "NC11", "TN09", "TX10", "TX22", "TX33", "TX37"]
+gdf_clean["Incumbent_Running"] = ~gdf_clean["District"].isin(retiring_districts)
+
+# Reassign FL-25 incumbent and clarify FL-22 open status
+gdf_clean.loc[gdf_clean["District"] == "FL25", "Current_Rep"] = "Jared Moskowitz"
+gdf_clean.loc[gdf_clean["District"] == "FL25", "House_Winner"] = "Jared Moskowitz"
+gdf_clean.loc[gdf_clean["District"] == "FL25", "House_Party"] = "DEM"
+gdf_clean.loc[gdf_clean["District"] == "FL22", "Current_Rep"] = "Open Seat (Frankel in FL-23)"
+
 reordered_columns = [
-    "District No.",
-    "District",
-    "District_Hover",
-    "District_Name",
-    "WhitePct",
-    "MinorityPct",
-    "BlackPct",
-    "HispanicPct",
-    "AsianPct",
-    "Partisan_Lean_Index",
-    "House_Winner",
-    "Current_Rep",
-    "House_Party",
-    "House_MOV_Raw",
-    "House_Race_Type",
-    "Harris New",
-    "Trump New",
-    "Margin New",
-    "Margin Shift",
-    "Partisan Index",
-    "Harris 24",
-    "Trump 24",
-    "Margin 24",
-    "Targeted",
-    "Target_Party",
-    "geometry",
+    "District No.", "District", "District_Hover", "District_Name", "WhitePct", 
+    "MinorityPct", "BlackPct", "HispanicPct", "AsianPct", "Partisan_Lean_Index", 
+    "House_Winner", "Current_Rep", "House_Party", "House_MOV_Raw", "House_Race_Type", 
+    "Harris New", "Trump New", "Margin New", "Margin Shift", "Partisan Index", 
+    "Harris 24", "Trump 24", "Margin 24", "Targeted", "Diluted", "Incumbent_Running", 
+    "Target_Party", "geometry"
 ]
 
 export_columns = [col for col in reordered_columns if col in gdf_clean.columns]
 gdf_clean = gdf_clean[export_columns]
 
-export_path = "../docs/map2026.geojson"
+export_path = "docs/map2026.geojson" if os.path.exists("docs") else "../docs/map2026.geojson"
 gdf_clean.to_file(export_path, driver="GeoJSON")
-print(f"Exported compiled district map layer to {export_path}")
+print(f"Exported clean GeoJSON with filtered Diluted flags to {export_path}")
+
+
+# In[7]:
+
+
+# # Generate clean, accurately proportioned SVG path strings from the Census shapefile
+# import json
+# import matplotlib.pyplot as plt
+# from shapely.affinity import translate, scale
+# from matplotlib.patches import Circle
+
+# data_dir = "data" if os.path.exists("data") else "../data"
+# shp_matches = glob.glob(os.path.join(data_dir, "cb_*", "*.shp"))
+# if not shp_matches:
+#     shp_matches = glob.glob("data/cb_*/*.shp") or glob.glob("../data/cb_*/*.shp")
+
+# states_raw = gpd.read_file(shp_matches[0]).to_crs("EPSG:9311")
+
+# image_output_dir = os.path.join("docs", "images")
+# if not os.path.exists("docs") and os.path.exists("../docs"):
+#     image_output_dir = os.path.join("../docs", "images")
+# os.makedirs(image_output_dir, exist_ok=True)
+
+# # 2. Export party-colored state shapes for Chart 2 (CA = Blue, others = Red)
+# state_parties = {
+#     "CA": "#2563eb",  # Democratic (Blue)
+#     "TX": "#dc2626",  # Republican (Red)
+#     "FL": "#dc2626",  # Republican (Red)
+#     "OH": "#dc2626",  # Republican (Red)
+#     "NC": "#dc2626",  # Republican (Red)
+#     "TN": "#dc2626",  # Republican (Red)
+#     "AL": "#dc2626",  # Republican (Red)
+#     "LA": "#dc2626"   # Republican (Red)
+# }
+
+# for abbr, color in state_parties.items():
+#     match_row = states_raw[states_raw["STUSPS"] == abbr]
+#     if match_row.empty:
+#         continue
+    
+#     fig, ax = plt.subplots(figsize=(3, 3))
+#     match_row.plot(ax=ax, color=color, edgecolor="#0f172a", linewidth=2.0)
+#     ax.set_axis_off()
+#     plt.tight_layout()
+    
+#     out_img_path = os.path.join(image_output_dir, f"{abbr}_shape.png")
+#     plt.savefig(out_img_path, dpi=300, transparent=True, bbox_inches='tight')
+#     plt.close(fig)
+#     print(f"Exported party-colored state shape: {out_img_path}")
+
+
+# In[8]:
+
+
+# Generate favicon
+# from matplotlib.patches import Circle
+# from PIL import Image
+
+# data_dir = "data" if os.path.exists("data") else "../data"
+# shp_matches = glob.glob(os.path.join(data_dir, "cb_*", "*.shp"))
+# if not shp_matches:
+#     shp_matches = glob.glob("data/cb_*/*.shp") or glob.glob("../data/cb_*/*.shp")
+
+# states_raw = gpd.read_file(shp_matches[0]).to_crs("EPSG:9311")
+
+# # 2. Setup output directories
+# docs_dir = "docs" if os.path.exists("docs") else "../docs"
+# image_output_dir = os.path.join(docs_dir, "images")
+# os.makedirs(image_output_dir, exist_ok=True)
+# os.makedirs(docs_dir, exist_ok=True)
+
+# # 3. Grab original Texas geometry and its fixed bounds
+# tx_geom = states_raw.loc[states_raw["STUSPS"] == "TX", "geometry"].values[0]
+# minx, miny, maxx, maxy = tx_geom.bounds
+
+# # Scale down by 0.8 around its centroid for balanced padding inside the circle
+# tx_scaled = scale(tx_geom, xfact=0.8, yfact=0.8, origin='centroid')
+# tx_row = gpd.GeoDataFrame(geometry=[tx_scaled], crs=states_raw.crs)
+
+# # 4. Plot inside a fixed-limit canvas so scaling shrinks the visual shape cleanly
+# fig, ax = plt.subplots(figsize=(2, 2), subplot_kw={'aspect': 'equal'})
+
+# # Lock data limits to the unscaled Texas bounding box to prevent auto-zooming
+# ax.set_xlim(minx, maxx)
+# ax.set_ylim(miny, maxy)
+
+# # Draw circular badge
+# circ = Circle((0.5, 0.5), 0.48, transform=ax.transAxes, facecolor="#ffffff", edgecolor="#2563eb", linewidth=5)
+# ax.add_patch(circ)
+
+# # Plot scaled Texas shape
+# tx_row.plot(ax=ax, color="#dc2626", edgecolor="#0f172a", linewidth=1.2)
+# ax.set_axis_off()
+# plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+# # 5. Save to a temporary PNG inside docs/images/
+# temp_png = os.path.join(image_output_dir, "temp_favicon.png")
+# plt.savefig(temp_png, dpi=300, transparent=True, bbox_inches='tight', pad_inches=0)
+# plt.close(fig)
+
+# # 6. Convert and export as a true multi-resolution .ico file directly to docs/ root
+# img = Image.open(temp_png).convert("RGBA")
+# root_ico_path = os.path.join(docs_dir, "favicon.ico")
+
+# img.save(root_ico_path, format="ICO", sizes=[(32, 32), (64, 64)])
+
+# print("Successfully generated and exported Favicon")
 

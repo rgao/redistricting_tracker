@@ -6,7 +6,7 @@
   margin: 0 !important;
   z-index: 1000;
   background: rgba(255, 255, 255, 0.98);
-  /* Integrated bipartisan divider line at the bottom of the header */
+  /* Header-map Divider */
   border-bottom: 2.5px solid transparent;
   border-image: linear-gradient(90deg, #dc2626 0%, #cbd5e1 50%, #2563eb 100%) 1;
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.07);
@@ -26,7 +26,6 @@
   text-align: center;
 }
 
-/* VoteHub-inspired: All-caps, larger size, lighter weight, and open tracking */
 #map-title {
   margin: 0 auto;
   font-size: 28px;
@@ -52,7 +51,7 @@
   width: 100%;
 }
 
-/* Modern Segmented Pill Navigation Container */
+/* Navigation Container */
 .nav-pill-group {
   display: inline-flex;
   background: #f1f5f9;
