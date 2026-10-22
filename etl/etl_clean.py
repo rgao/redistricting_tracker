@@ -34,14 +34,14 @@ for item in state_files:
 
     if gdf.crs != TARGET_CRS:
         gdf = gdf.to_crs(TARGET_CRS)
-        
+
     gdf["District"] = item["postal"] + gdf["id"].astype(str).str.zfill(2)
-    
+
     gdf = gdf[[
         "id", "District", "DemPct", "RepPct", "WhitePct", "MinorityPct", 
         "BlackPct", "HispanicPct", "AsianPct", "Margin", "geometry"
     ]]
-    
+
     all_gdfs.append(gdf)
 
 states_gdf = pd.concat(all_gdfs, ignore_index=True)
@@ -96,19 +96,19 @@ pres_2020_records = []
 for filepath in csv_2020_files:
     state_abbr = os.path.basename(filepath)[:2].upper()
     df_st = pd.read_csv(filepath)
-    
+
     dist_col = [c for c in df_st.columns if 'district' in c.lower() or c.lower() == 'id'][0]
     dem_col = [c for c in df_st.columns if any(k in c.lower() for k in ['dem', 'biden', 'd_'])][0]
     gop_col = [c for c in df_st.columns if any(k in c.lower() for k in ['rep', 'gop', 'trump', 'r_'])][0]
-    
+
     for _, row in df_st.iterrows():
         raw_dist = str(row[dist_col]).strip()
         dist_num = ''.join(filter(str.isdigit, raw_dist))
         district_id = f"{state_abbr}{int(dist_num):02d}" if dist_num else f"{state_abbr}01"
-            
+
         dem_val = float(row[dem_col])
         gop_val = float(row[gop_col])
-        
+
         if dem_val > 1.0 or gop_val > 1.0:
             total_2party = dem_val + gop_val
             margin_2020 = (dem_val - gop_val) / total_2party if total_2party > 0 else 0.0
@@ -140,7 +140,7 @@ house_path = os.path.join(data_dir, "pres2024", "house_2024_summary.csv")
 
 if os.path.exists(house_path):
     house_df = pd.read_csv(house_path)
-    
+
     state_lookup = {
         'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
         'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
@@ -163,7 +163,7 @@ if os.path.exists(house_path):
                 num = int(code[2:])
             except ValueError:
                 num = 1
-                
+
             if num == 0:
                 short = f"{st_name} At-Large"
                 full = f"{st_name} At-Large District"
@@ -184,7 +184,7 @@ if os.path.exists(house_path):
         'District', 'House_Winner', 'Current_Rep', 'House_Party', 'House_MOV_Raw', 
         'House_Race_Type', 'Effective_House_Margin', 'District_Hover', 'District_Name'
     ] if c in house_df.columns]
-    
+
     gdf_clean = gdf_clean.merge(house_df[merge_cols], on='District', how='left')
 
 # National presidential vote
@@ -203,9 +203,9 @@ def format_lean_number(val):
         return "EVEN"
     num = abs(val) * 100
     return f"D +{num:.1f}" if val > 0 else f"R +{num:.1f}"
-    
+
 gdf_clean['Partisan_Lean_Index'] = gdf_clean['Partisan Index'].apply(format_lean_number)
-    
+
 gdf_clean['Partisan_Lean_Index'] = gdf_clean['Partisan Index'].apply(format_lean_number)
 gdf_clean.head()
 
@@ -321,12 +321,12 @@ print(f"Exported clean GeoJSON with filtered Diluted flags to {export_path}")
 #     match_row = states_raw[states_raw["STUSPS"] == abbr]
 #     if match_row.empty:
 #         continue
-    
+
 #     fig, ax = plt.subplots(figsize=(3, 3))
 #     match_row.plot(ax=ax, color=color, edgecolor="#0f172a", linewidth=2.0)
 #     ax.set_axis_off()
 #     plt.tight_layout()
-    
+
 #     out_img_path = os.path.join(image_output_dir, f"{abbr}_shape.png")
 #     plt.savefig(out_img_path, dpi=300, transparent=True, bbox_inches='tight')
 #     plt.close(fig)

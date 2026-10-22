@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
+# In[19]:
 
 
 import os
@@ -19,7 +19,7 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[11]:
+# In[20]:
 
 
 # Format partisan margins into human-readable strings (e.g., Trump+7.89 or Harris+4.12)
@@ -40,7 +40,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[12]:
+# In[21]:
 
 
 # Compute continuous divergent RGB color ramps based on partisan vote margins
@@ -73,7 +73,7 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[13]:
+# In[22]:
 
 
 # Filter and aggregate statistics exclusively for targeted or impacted districts
@@ -134,7 +134,7 @@ sidebar_context = {
 }
 
 
-# In[14]:
+# In[23]:
 
 
 # Calculate national tipping point seats and congressional generic ballot advantage
@@ -146,7 +146,7 @@ if os.path.exists(house_natl_path):
     house_natl = pd.read_csv(house_natl_path)
     house_natl = house_natl.merge(gdf[['District', 'Margin New']], on='District', how='left')
     house_natl['Margin_Post'] = house_natl['Margin New'].combine_first(house_natl['Margin_2party'])
-    
+
     sorted_24 = house_natl.sort_values(by='Margin_2party', ascending=False).reset_index(drop=True)
     raw_old_name = sorted_24.loc[217, 'District']
     tipping_old_name = format_district_code(raw_old_name)
@@ -164,11 +164,11 @@ if os.path.exists(house_natl_path):
     post_rep_seats = int((house_natl['Margin_Post'] < 0).sum())
     post_dem_seats = int((house_natl['Margin_Post'] > 0).sum())
     total_house_seats = len(house_natl) if len(house_natl) > 0 else 435
-    
+
     mean_national_margin = house_natl['Margin_2party'].mean()
     natl_gop_vote_share = 0.50 - (mean_national_margin / 2.0)
     natl_dem_vote_share = 0.50 + (mean_national_margin / 2.0)
-    
+
     if post_rep_seats >= post_dem_seats:
         seat_share = post_rep_seats / total_house_seats
         advantage_val = (seat_share - natl_gop_vote_share) * 100
@@ -179,7 +179,7 @@ if os.path.exists(house_natl_path):
         advantage_val = (seat_share - natl_dem_vote_share) * 100
         ballot_adv_party = "D"
         ballot_adv_class = "dem"
-        
+
     ballot_adv_display = f"{ballot_adv_party} +{abs(advantage_val):.2f}%"
 
 else:
@@ -204,7 +204,7 @@ sidebar_context.update({
 })
 
 
-# In[15]:
+# In[24]:
 
 
 # Parse layout component templates and inject dynamic sidebar context data
@@ -237,7 +237,7 @@ MAP_OPTIONS = {
 }
 
 
-# In[16]:
+# In[25]:
 
 
 # Initialize and compile standalone Folium web maps with tile layers and custom UI elements
@@ -276,7 +276,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     def style_main(feature):
         margin = feature['properties'].get(target_column, 0)
         return {'fillColor': color_scheme(margin), 'color': 'black', 'weight': 1, 'fillOpacity': 0.8}
-        
+
     def style_hatch(feature):
         if feature['properties'].get('Targeted', False):
             return {'fillPattern': hatch_pattern, 'fillOpacity': 0.6, 'color': 'transparent'}
@@ -296,7 +296,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
         min_zoom=MAP_OPTIONS["min_zoom"],
         max_zoom=MAP_OPTIONS["max_zoom"],
     ).add_to(m)
-    
+
     legend = branca.colormap.LinearColormap(
         colors=LEGEND_COLORS, 
         index=LEGEND_BOUNDS, 
@@ -304,7 +304,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
         vmax=max(LEGEND_BOUNDS), 
         caption=legend_caption
     )
-    
+
     legend.tick_labels = LEGEND_TICKS
     legend.height = 45
     m.add_child(legend)
@@ -312,11 +312,38 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     m.get_root().html.add_child(folium.Element(HEADER_HTML_CONTENT))
     m.get_root().html.add_child(folium.Element(SIDEBAR_HTML_CONTENT))
     m.get_root().html.add_child(folium.Element(FOOTER_HTML_CONTENT))
-    
+
+    # Open Graph & Twitter Card metadata for social media previews (Reddit, X, Discord)
+    BASE_URL = "https://rgao.github.io/redistricting_tracker"
+
+    meta_tags = f'''
+    <!-- Primary Metadata -->
+    <meta name="title" content="Mid-Decade Redistricting: 2026 Partisan Lean & Shift Tracker">
+    <meta name="description" content="Interactive tracking of mid-decade congressional redistricting, seat flips, and generic ballot impacts for the 2026 elections.">
+
+    <!-- Open Graph / Reddit / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{BASE_URL}/">
+    <meta property="og:title" content="Mid-Decade Redistricting Visualization: Interactive Maps and Charts.">
+    <meta property="og:description" content="Interactive tracking of mid-decade congressional redistricting, seat flips, and generic ballot impacts for the 2026 elections.">
+    <meta property="og:image" content="{BASE_URL}/images/preview_chart.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{BASE_URL}/">
+    <meta name="twitter:title" content="Mid-Decade Redistricting Visualization: Interactive Maps and Charts.">
+    <meta name="twitter:description" content="Interactive tracking of mid-decade congressional redistricting, seat flips, and generic ballot impacts for the 2026 elections.">
+    <meta name="twitter:image" content="{BASE_URL}/images/preview_chart.png">
+    '''
+
+    m.get_root().header.add_child(folium.Element(meta_tags))
+
     m.get_root().header.add_child(folium.Element('<link rel="stylesheet" href="index.css">'))
     m.get_root().html.add_child(folium.Element('<script src="js/main.js"></script>'))
     m.get_root().header.add_child(folium.Element('<link rel="icon" type="image/png" sizes="32x32" href="./favicon.ico">'))
-    
+
     m.save(filename)
     print(f"Successfully compiled: {filename}")
 
@@ -340,7 +367,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[17]:
+# In[26]:
 
 
 # Configure interactive hover tooltips for the map layers
@@ -359,7 +386,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[18]:
+# In[ ]:
 
 
 # Build and save the main margin lean map interface

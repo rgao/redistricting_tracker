@@ -170,19 +170,19 @@ try:
     print("Fetching live current representative directory...")
     current_reps_url = "https://theunitedstates.io/congress-legislators/legislators-current.csv"
     cur_df = pd.read_csv(current_reps_url)
-    
+
     # Filter for House of Representatives only
     cur_house = cur_df[cur_df['type'] == 'rep'].copy()
     cur_house['district_clean'] = pd.to_numeric(cur_house['district'], errors='coerce').fillna(1).astype(int)
     cur_house['District'] = cur_house['state'].astype(str).str.upper() + cur_house['district_clean'].astype(str).str.zfill(2)
-    
+
     cur_house['Current_Rep'] = cur_house['first_name'].fillna('') + ' ' + cur_house['last_name'].fillna('')
     cur_house['Current_Rep'] = cur_house['Current_Rep'].str.strip()
-    
+
     # Merge live representative; fall back to 2024 general winner if empty
     house_summary = house_summary.merge(cur_house[['District', 'Current_Rep']], on='District', how='left')
     house_summary['Current_Rep'] = house_summary['Current_Rep'].fillna(house_summary['House_Winner'])
-    
+
     # Update House_Winner so downstream charts pick up the incumbent immediately
     house_summary['House_Winner'] = house_summary['Current_Rep']
     print(f"Successfully integrated {len(cur_house)} live sitting representatives.")

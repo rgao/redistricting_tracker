@@ -1,10 +1,10 @@
 @media (max-width: 810px) {
   :root {
-    --header-height: 148px;
+    --header-height: 135px;
   }
 
   #map-title {
-    font-size: 21px !important;
+    font-size: 19px !important;
   }
 
   #master-footer-wrapper {
@@ -83,8 +83,19 @@
     transform-origin: top right !important;
   }
 
-  /* Slightly reduce sidebar width on intermediate viewports so map center remains visible */
   .sidebar {
     width: 360px !important;
+  }
+
+  .analysis-container {
+    padding: 0 12px; 
+  }
+
+  .analysis-card {
+    padding: 20px 16px; 
+  }
+
+  .methodology-grid {
+    grid-template-columns: 1fr; /* Stack side-by-side methodology elements on mobile */
   }
 }
