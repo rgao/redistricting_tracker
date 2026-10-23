@@ -1,13 +1,39 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+    // Default fallback environment value
+    let currentEnvMargin = 8.0;
+    let formattedEnvString = "D+8.0";
+
+    try {
+        // Correct path from docs/js/ to docs/environment.json
+        const response = await fetch('./environment.json');
+        const envData = await response.json();
+        if (envData && envData.meta_aggregate) {
+            if (typeof envData.meta_aggregate.gcb_margin === 'number') {
+                currentEnvMargin = envData.meta_aggregate.gcb_margin;
+            }
+            if (envData.meta_aggregate.formatted_margin) {
+                formattedEnvString = envData.meta_aggregate.formatted_margin;
+            }
+        }
+    } catch (err) {
+        console.warn("Could not load dynamic environment.json from docs root, defaulting to D+8.0", err);
+    }
+
+    // Update UI toggle button and indicator labels dynamically on load
+    const btn2026 = document.getElementById('scenario-btn-2026');
+    if (btn2026) btn2026.textContent = `2026 Midterm (${formattedEnvString} Environment)`;
+
+    const initialIndicatorText = `Active Environment: 2026 Midterm (${formattedEnvString})`;
+    const lbl1 = document.getElementById("chart1-env-label");
+    const lbl2 = document.getElementById("chart2-env-label");
+    if (lbl1) lbl1.textContent = initialIndicatorText;
+    if (lbl2) lbl2.textContent = initialIndicatorText;
 
     // =========================================================================
     // 1. INDIVIDUAL DISTRICT GERRYMANDER DURABILITY CHART (CHART 1)
     // =========================================================================
     const chartContainer = document.getElementById("gerrymander-chart");
     if (chartContainer) {
-        // State Elasticity: Measures how responsive a state's electorate is to national partisan swings.
-        // Polarized, racially polarized states (like MS, AL) move sluggishly (< 0.85),
-        // while highly elastic swing states (like NH, NV, WI) swing aggressively with national wave winds (> 1.05).
         const STATE_ELASTICITY = {
             "AL": 0.81, "MS": 0.79, "GA": 0.84, "SC": 0.88, "MD": 0.87,
             "LA": 0.93, "NC": 0.94, "VA": 0.92, "NY": 0.96, "CA": 0.96,
@@ -32,9 +58,6 @@ document.addEventListener("DOMContentLoaded", function () {
             "WISCONSIN": "WI", "WYOMING": "WY"
         };
 
-        // Standardizes irregular incoming district strings into a uniform "ST-##" identifier.
-        // Handles unhyphenated codes ("CA22" -> "CA-22"), unpadded numbers ("FL-3" -> "FL-03"),
-        // and strips dirty asterisk tags from long-form text (e.g. "Alabama 2nd District *").
         function formatDistrictCode(rawCode, rawName) {
             if (typeof rawCode === "string" && rawCode.length === 4 && !rawCode.includes("-")) {
                 return `${rawCode.slice(0, 2)}-${rawCode.slice(2)}`;
@@ -55,8 +78,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return rawCode || "UNK";
         }
 
-        // Converts human-readable partisan lean strings ("D+4.5", "R+11.2", "EVEN")
-        // into signed floating-point numbers (+ for Dem advantage, - for GOP advantage).
         function parsePartisanIndex(str) {
             if (!str || str === "EVEN") return 0.0;
             const clean = String(str).replace(/\s+/g, "").toUpperCase();
@@ -66,20 +87,17 @@ document.addEventListener("DOMContentLoaded", function () {
             return isNaN(num) ? 0.0 : num;
         }
 
-        // Detects non-standard general elections (e.g., California same-party top-two runoffs,
-        // unopposed third-party challenges) where the House margin needs presidential imputation.
         function isNonStandardRace(raceType) {
             if (!raceType) return false;
             const rt = String(raceType).toLowerCase();
             return !(rt.includes("standard") && !rt.includes("non-standard"));
         }
 
-        // Color coding scale for our Gerrymander Effectiveness Score
         function getScoreColor(val) {
-            if (val >= 65) return "#10b981"; // Safe gerrymander payoff
-            if (val >= 50) return "#f59e0b"; // Marginal flip
-            if (val >= 35) return "#f97316"; // Endangered flip
-            return "#ef4444";                 // High-risk dummymander
+            if (val >= 65) return "#10b981";
+            if (val >= 50) return "#f59e0b";
+            if (val >= 35) return "#f97316";
+            return "#ef4444";
         }
 
         const candidatePaths = [
@@ -110,7 +128,6 @@ document.addEventListener("DOMContentLoaded", function () {
         loadGeoJSON(0);
 
         function renderGerrymanderChart(geojson) {
-            // Isolate only the explicit flip targets engineered by mapmakers
             const targetedFeatures = geojson.features.filter(f => {
                 const t = f.properties && f.properties.Targeted;
                 return t === true || t === "True" || t === 1;
@@ -121,8 +138,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 return [];
             }
 
-            // Core modeling function: reads properties straight from the Python ETL pipeline (the single source of truth)
-            // and computes flip probabilities across both wave (2026) and neutral baseline environments.
             function calculateMetrics(feature) {
                 const props = feature.properties || {};
                 const id = formatDistrictCode(props.District, props.District_Name);
@@ -134,7 +149,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 const raceType = props.House_Race_Type || "Standard Contest";
                 const nonStandard = isNonStandardRace(raceType);
 
-                // Ingesting the Python ETL values directly — avoiding brittle frontend hardcoded exceptions
                 const currentRep = props.Current_Rep || props.House_Winner || "N/A";
                 const repParty = props.House_Party || "OTHER";
                 const isIncumbentRunning = props.Incumbent_Running === true || props.Incumbent_Running === "True";
@@ -153,8 +167,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const beta_env = STATE_ELASTICITY[statePostal] || 0.95;
 
-                // Incumbency Advantage: Sitting representatives get a +3.0 margin boost only if they are actively running.
-                // Open/retiring seats (like FL-22 where Frankel shifted to FL-23) get 0.0.
                 let incumbencyOffset = 0.0;
                 if (isIncumbentRunning && repParty) {
                     const rp = String(repParty).toUpperCase();
@@ -162,21 +174,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     else if (rp.startsWith("R")) incumbencyOffset = -3.0;
                 }
 
-                const env2026 = 8.0; // D+8.0 national environment benchmark
-                const sigma = 5.5;   // Historical standard deviation of congressional district variance
+                // Dynamic environment variable correctly applied here
+                const env2026 = currentEnvMargin;
+                const sigma = 5.5;
 
-                // Logistic Probability: P = 1 / (1 + e^(-mu / sigma))
-                // Scenario 1: 2026 Midterm wave environment
                 const mu2026 = partisanIndex + (beta_env * env2026) + incumbencyOffset;
                 const pDem2026 = 1 / (1 + Math.exp(-mu2026 / sigma));
                 const pIntended2026 = party === "DEM" ? pDem2026 : (1 - pDem2026);
 
-                // Scenario 2: Neutral political environment
                 const muNeutral = partisanIndex + incumbencyOffset;
                 const pDemNeutral = 1 / (1 + Math.exp(-muNeutral / sigma));
                 const pIntendedNeutral = party === "DEM" ? pDemNeutral : (1 - pDemNeutral);
 
-                // Effectiveness score: blended average probability of success across both wave and neutral scenarios
                 const staticEffectivenessScore = Math.round(((pIntended2026 + pIntendedNeutral) / 2) * 100);
 
                 const yPos2026 = pIntended2026 * 100;
@@ -221,7 +230,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const xScale = d3.scaleLinear().domain([-xDomainLimit, xDomainLimit]).range([0, width]);
             const yScale = d3.scaleLinear().domain([0, 100]).range([height, 0]);
 
-            // Circle radius encodes the absolute magnitude of the line shift
             const maxShiftVal = d3.max(data, d => d.absShift) || 40;
             const maxR = 24;
             const rScale = d3.scaleSqrt().domain([0, maxShiftVal]).range([0, maxR]);
@@ -255,8 +263,6 @@ document.addEventListener("DOMContentLoaded", function () {
             function getActiveY(d, mode) { return mode === "neutral" ? d.yPosNeutral : d.yPos2026; }
             let currentMode = "2026";
 
-            // Vertical label fanning algorithm: avoids messy diagonal floating by strictly locking labels to their
-            // district's vertical X-axis and stepping straight up or down until they find open canvas space.
             function computePositions(mode) {
                 const nodes = data.map(d => {
                     const cx = xScale(d.party === "DEM" ? -Math.abs(d.partisanIndex) : Math.abs(d.partisanIndex));
@@ -265,7 +271,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     return { d, cx, cy, r };
                 });
 
-                // Prioritize larger circles so major district shifts claim the cleanest label positions first
                 nodes.sort((a, b) => b.r - a.r || a.cx - b.cx);
 
                 const labelW = 56;
@@ -321,7 +326,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         18, 26, 34, 44, 54, 66, 78, 92, 108, 126, 146, 168, 192, 220
                     ];
 
-                    // Ladder upward first
                     for (let offset of verticalSteps) {
                         let ty = cy - r - offset;
                         if (ty >= 20 && !boxCollidesWithCircles(cx, ty) && !boxCollidesWithLabels(cx, ty)) {
@@ -331,7 +335,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     }
 
-                    // If blocked upward, search downward
                     if (!found) {
                         for (let offset of verticalSteps) {
                             let ty = cy + r + offset;
@@ -465,7 +468,6 @@ document.addEventListener("DOMContentLoaded", function () {
             { state: "Louisiana", abbr: "LA", party: "REP", preDem: 2, preRep: 4, totalSeats: 6, targetDem: 1, targetRep: 5 }
         ];
 
-        // Sum up the individual district probabilities to determine total expected net delegation seat gain per state
         const stateDelegationData = baseStateConfig.map(st => {
             const matchedDistricts = Array.isArray(districtData)
                 ? districtData.filter(d => d.statePostal === st.abbr)
@@ -540,8 +542,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function getEV(d, mode) { return mode === "neutral" ? d.evNeutral : d.ev2026; }
 
-        // Chart 2 layout: Tennessee, Louisiana, and Alabama share the exact same X coordinate (x=1).
-        // To prevent collision, we fan their labels out to the left using dashed leader lines with balanced spacing.
         function getPositions(mode) {
             return stateDelegationData.map(d => {
                 const cx = xScale(d.party === "DEM" ? -d.targeted : d.targeted);
@@ -549,7 +549,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 const r = 16;
                 let lx = cx, ly = cy, anchor = "middle";
 
-                // Lone states with distinct X positions get top/bottom placements
                 if (d.abbr === "CA") {
                     lx = cx; ly = cy - r - 8; anchor = "middle";
                 } else if (d.abbr === "TX") {
@@ -560,14 +559,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     lx = cx; ly = cy - r - 8; anchor = "middle";
                 } else if (d.abbr === "NC") {
                     lx = cx; ly = cy + r + 14; anchor = "middle";
-                } 
-                // The 1-target cluster (x = 1): Fanned out horizontally to the left
-                else if (d.abbr === "TN") {
+                } else if (d.abbr === "TN") {
                     lx = cx - 48; ly = cy - 36; anchor = "end";
                 } else if (d.abbr === "LA") {
                     lx = cx - 48; ly = cy - 4; anchor = "end";
                 } else if (d.abbr === "AL") {
-                    // Positioned at +18 to sit comfortably above North Carolina and the dashed zero-line
                     lx = cx - 48; ly = cy + 18; anchor = "end";
                 }
 
@@ -630,7 +626,6 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .on("mouseout", function () { tooltip.classed("visible", false); });
 
-        // Invisible wider stroke line behind the leader line so users don't trigger mouseout when crossing leader lines
         stateNodes.append("line")
             .attr("class", "leader-hover-buffer")
             .attr("stroke", "transparent")
@@ -679,9 +674,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================================================================
-    // 3. MASTER SCENARIO TOGGLE CONTROLLER
+    // 3. TOGGLE CONTROLLER
     // =========================================================================
-    // Coordinates button clicks to transition both charts between Wave (2026) and Neutral scenarios
     document.querySelectorAll(".scenario-btn").forEach(btn => {
         btn.addEventListener("click", function (e) {
             e.preventDefault();
@@ -691,7 +685,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const envText = selectedMode === "neutral"
                 ? "Active Environment: Neutral"
-                : "Active Environment: 2026 Midterm (D+8.0)";
+                : `Active Environment: 2026 Midterm (${formattedEnvString})`;
 
             const envColor = selectedMode === "neutral" ? "#475569" : "#2563eb";
 

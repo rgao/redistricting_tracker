@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "name": "RealClearPolling Aggregate",
+      "dem": 50.5,
+      "rep": 42.4,
+      "margin": 8.1
+    },
+    {
+      "name": "FiftyPlusOne Aggregate",
+      "dem": 52.0,
+      "rep": 42.9,
+      "margin": 9.1
+    }
+  ],
+  "meta_aggregate": {
+    "dem_share": 51.25,
+    "rep_share": 42.65,
+    "gcb_margin": 8.6,
+    "formatted_margin": "D+8.6"
+  }
+}
