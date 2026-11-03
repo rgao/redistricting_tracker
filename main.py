@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[19]:
+# In[1]:
 
 
 import os
@@ -19,7 +19,26 @@ print(gdf.crs)
 gdf.head()
 
 
-# In[20]:
+# In[2]:
+
+
+import json
+
+env_path = "docs/environment.json"
+if not os.path.exists(env_path):
+  env_path = "environment.json"
+
+with open(env_path, "r") as f:
+  env_data = json.load(f)
+
+national_environment = env_data["meta_aggregate"]["gcb_margin"]
+print(
+    "Loaded active national environment into modeling pipeline:"
+    f" D+{national_environment}"
+)
+
+
+# In[3]:
 
 
 # Format partisan margins into human-readable strings (e.g., Trump+7.89 or Harris+4.12)
@@ -40,7 +59,7 @@ gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
 gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
 
 
-# In[21]:
+# In[4]:
 
 
 # Compute continuous divergent RGB color ramps based on partisan vote margins
@@ -73,7 +92,7 @@ def color_scheme(margin):
         else: return interpolate(margin, -0.23, -0.45, COLOR_RED_MID, COLOR_DARKRED)
 
 
-# In[22]:
+# In[5]:
 
 
 # Filter and aggregate statistics exclusively for targeted or impacted districts
@@ -134,7 +153,7 @@ sidebar_context = {
 }
 
 
-# In[23]:
+# In[6]:
 
 
 # Calculate national tipping point seats and congressional generic ballot advantage
@@ -204,7 +223,7 @@ sidebar_context.update({
 })
 
 
-# In[24]:
+# In[7]:
 
 
 # Parse layout component templates and inject dynamic sidebar context data
@@ -237,7 +256,7 @@ MAP_OPTIONS = {
 }
 
 
-# In[25]:
+# In[8]:
 
 
 # Initialize and compile standalone Folium web maps with tile layers and custom UI elements
@@ -367,7 +386,7 @@ def compile_map(filename, target_column, tooltip_config, legend_caption):
     return m
 
 
-# In[26]:
+# In[9]:
 
 
 # Configure interactive hover tooltips for the map layers
@@ -386,7 +405,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[ ]:
+# In[10]:
 
 
 # Build and save the main margin lean map interface

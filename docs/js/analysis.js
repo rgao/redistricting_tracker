@@ -149,7 +149,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const raceType = props.House_Race_Type || "Standard Contest";
                 const nonStandard = isNonStandardRace(raceType);
 
-                const currentRep = props.Current_Rep || props.House_Winner || "N/A";
+                let currentRep = props.Current_Rep || props.House_Winner || "N/A";
+
+                // Clean out extra descriptions or parentheticals for FL-22
+                if (id === "FL-22") {
+                    currentRep = "Open Seat";
+                };
+                
                 const repParty = props.House_Party || "OTHER";
                 const isIncumbentRunning = props.Incumbent_Running === true || props.Incumbent_Running === "True";
 
