@@ -41,22 +41,41 @@ print(
 # In[3]:
 
 
-# Format partisan margins into human-readable strings (e.g., Trump+7.89 or Harris+4.12)
-def partisan_text(val):
-    if val is None or str(val).strip() in ['', 'nan', 'None']: 
-        return "EVEN"
-    try:
-        num = val * 100
-        if abs(num) < .01: return "EVEN"
-        elif num < 0: return f"Trump+{abs(num):.2f}"
-        elif num > 0: return f"Harris+{num:.2f}"
-        return "EVEN"
-    except ValueError: 
-        return str(val)
+# Account for rounding noise when displaying margins and shifts
+no_change_mask = gdf["Margin Shift"].abs() < 0.0005
 
-gdf['Margin Partisan'] = gdf['Margin 24'].apply(partisan_text)
-gdf['Margin New Partisan'] = gdf['Margin New'].apply(partisan_text)
-gdf['Margin Shift Partisan'] = gdf['Margin Shift'].apply(partisan_text)
+gdf.loc[no_change_mask, "Margin Shift"] = 0.0
+gdf.loc[no_change_mask, "Margin New"] = gdf.loc[no_change_mask, "Margin 24"]
+gdf.loc[no_change_mask, "Harris New"] = gdf.loc[no_change_mask, "Harris 24"]
+gdf.loc[no_change_mask, "Trump New"] = gdf.loc[no_change_mask, "Trump 24"]
+
+
+# Format partisan margins into human-readable strings (e.g., Trump+7.89 or Harris+4.12)
+def partisan_text(val, is_shift=False):
+  if val is None or str(val).strip() in ["", "nan", "None"]:
+    return "No Change" if is_shift else "EVEN"
+  try:
+    num = val * 100
+    if abs(num) < 0.05:  # Matches the 0.0005 decimal dead-zone
+      return "No Change" if is_shift else "EVEN"
+    elif num < 0:
+      return f"Trump+{abs(num):.2f}"
+    elif num > 0:
+      return f"Harris+{num:.2f}"
+    return "No Change" if is_shift else "EVEN"
+  except ValueError:
+    return str(val)
+
+
+gdf["Margin Partisan"] = gdf["Margin 24"].apply(
+    lambda x: partisan_text(x, is_shift=False)
+)
+gdf["Margin New Partisan"] = gdf["Margin New"].apply(
+    lambda x: partisan_text(x, is_shift=False)
+)
+gdf["Margin Shift Partisan"] = gdf["Margin Shift"].apply(
+    lambda x: partisan_text(x, is_shift=True)
+)
 
 
 # In[4]:
@@ -405,7 +424,7 @@ tooltip_shift = folium.GeoJsonTooltip(
 )
 
 
-# In[10]:
+# In[ ]:
 
 
 # Build and save the main margin lean map interface

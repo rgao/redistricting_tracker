@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
             } else if (text.startsWith("Trump+") || text.startsWith("R +") || text.startsWith("R+")) {
                 td.style.color = "#dc2626";
                 td.style.fontWeight = "bold";
-            } else if (text === "EVEN") {
+            } else if (text === "EVEN" || text === "No Change") {
                 td.style.color = "#64748b";
                 td.style.fontWeight = "bold";
             }
@@ -123,16 +123,16 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     function formatSignedMargin(val) {
-        if (val === null || val === undefined || isNaN(val)) return 'EVEN';
+        if (val === null || val === undefined || isNaN(val)) return 'N/A';
         const pct = Math.abs(val) * 100;
-        if (pct < 0.005) return 'EVEN';
+        if (pct < 0.05) return 'EVEN';
         return (val > 0 ? 'Harris +' : 'Trump +') + pct.toFixed(2) + '%';
     }
 
     function formatShiftMargin(val) {
-        if (val === null || val === undefined || isNaN(val)) return 'EVEN';
+        if (val === null || val === undefined || isNaN(val)) return 'N/A';
         const pct = Math.abs(val) * 100;
-        if (pct < 0.005) return 'EVEN';
+        if (pct < 0.05) return 'No Change';
         return (val > 0 ? 'Harris +' : 'Trump +') + pct.toFixed(2) + '%';
     }
 
